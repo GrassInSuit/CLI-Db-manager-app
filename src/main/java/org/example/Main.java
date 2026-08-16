@@ -15,14 +15,13 @@ public class Main {
         final String Prefix = Ergonomics.Color.Prefix;
         final String Arrow = Ergonomics.Color.Arrow;
         final Console console = System.console();
-        System.out.println(Ergonomics.Color.YELLOW + "---Welcome to IMS---" + Ergonomics.Color.RESET);
-
         //This boolean checkes if you are already loged in or not
         ContactSystem connectionManager = new ContactSystem();
         boolean isConnected = false;
 
         //Simple login system for the postgres database (URL, Database's name , user , password)
         while(!isConnected){
+            System.out.println(Ergonomics.Color.YELLOW + "---Welcome to IMS---" + Ergonomics.Color.RESET);
             System.out.println(Prefix + "Connecting to your Database:");
                 System.out.print(Arrow + "Enter Database URL " + Ergonomics.Color.YELLOW +"(default: localhost:5432):" + Ergonomics.Color.RESET);
                 String URL = scanner.nextLine();

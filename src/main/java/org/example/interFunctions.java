@@ -10,23 +10,28 @@ import java.util.Scanner;
 public class interFunctions {
     final private static DatabaseManager databaseManager = ContactSystem.databaseManager;
     private final static Scanner scanner = new Scanner(System.in);
+    private final static String Prefix = Ergonomics.Color.Prefix;
     enum mainMenuList {ITEMS,LOCATION,STOCKIN,STOCKOUT,ADJUST,TRANSFER,VIEWSTOCK,REPORTS,HISTORY,QUIT}
     enum managementList {ADD,DELETE,VIEW,EDIT,QUIT};
+    enum viewLocationList {ALL,DATE,QUIT};
 
 
     //--------------- MAIN SCREEN ---------------
 
 
     public static void mainScreenMenu(){
+        Ergonomics.clearScreen();
+        System.out.println(Ergonomics.Color.CYAN + "---INVENTORY MANAGEMENT SYSTEM---" + Ergonomics.Color.RESET);
         boolean isMainScreen = true;
         while (isMainScreen){
             mainMenuList SELECTED = mainMenuSelector();
+            Ergonomics.clearLines(11);
             switch (SELECTED){
                 case ITEMS -> itemManagementFunc();
                 case LOCATION -> locationManagementFunc();
                 case STOCKIN -> stockinDataCollector();
                 case STOCKOUT -> stockoutDataCollector();
-                case VIEWSTOCK -> viewStockLevelsDataCollector();
+                case VIEWSTOCK -> viewLocationFunc();
                 case ADJUST -> adjustStockValue();
                 case HISTORY -> itemHistoryDataCollector();
                 case QUIT -> isMainScreen = false;
@@ -70,7 +75,6 @@ public class interFunctions {
             default -> {
                 return  mainMenuList.QUIT;
             }
-
         }
     }
 
@@ -80,6 +84,7 @@ public class interFunctions {
 
     public static void itemManagementFunc(){
         managementList SELECTED = itemManagementSelector();
+        Ergonomics.clearLines(7);
         switch (SELECTED){
             case ADD -> addItemDataCollector();
             case DELETE -> deleteItemDataCollector();
@@ -116,7 +121,7 @@ public class interFunctions {
     }
     //subfunctions
     public static void addItemDataCollector(){
-        System.out.print("Enter SKU (or press enter to auto-generate): ");
+        System.out.print(Prefix + "Enter SKU (or press enter to auto-generate): ");
         scanner.nextLine();
         String sku = scanner.nextLine().trim();
         Ergonomics.clearLines(1);
@@ -133,13 +138,14 @@ public class interFunctions {
         } while (name.isEmpty());
 
         // Unit (required)
-        System.out.print("Enter unit of measure (each/kg/box/etc.): ");
+        System.out.print(Prefix + "Enter unit of measure (each/kg/box/etc.): ");
         String unit = scanner.nextLine().trim();
         Ergonomics.clearLines(1);
 
         // Category (optional)
-        System.out.print("Enter category (optional, press enter to skip): ");
+        System.out.print(Prefix + "Enter category (optional, press enter to skip): ");
         String category = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
         if (category.isEmpty()) {
             category = null;
         }
@@ -153,10 +159,10 @@ public class interFunctions {
             try {
                 reorderPoint = Integer.parseInt(input);
                 if (reorderPoint < 0) {                  
-                    System.out.println("Reorder point cannot be negative.");
+                    System.out.println(Prefix + "Reorder point cannot be negative.");
                 }
             } catch (NumberFormatException e) {
-                System.out.println("Please enter a valid number.");
+                System.out.println(Prefix + "Please enter a valid number.");
             }
         }
 
@@ -164,24 +170,23 @@ public class interFunctions {
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
-            Ergonomics.clearLines(1);
-            System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
+            System.out.print(Prefix + "Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
+            Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
                 createdAt = LocalDate.now();
             } else {
                 try {
                     createdAt = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    Ergonomics.clearLines(1);
-                    System.out.println("Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
                 }
             }
             databaseManager.addItem(sku,name,unit,category,reorderPoint,createdAt);
         }
     }
     public static void deleteItemDataCollector(){
-        System.out.println("Enter Items name (leave it blank to cancel):");
+        System.out.print("Enter Items name (leave it blank to cancel): ");
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
         while(name.isBlank()){
@@ -191,7 +196,7 @@ public class interFunctions {
         DatabaseManager.deleteItem(name);
     }
     public static void viewItemDataCollector(){
-        System.out.println("Enter Items name (leave it blank to cancel):");
+        System.out.print("Enter Items name (leave it blank to cancel): ");
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
         while(name.isBlank()){
@@ -210,7 +215,7 @@ public class interFunctions {
 
     }
     public static void EditItemDataCollector(){
-        System.out.println("Enter item's name:");
+        System.out.print("Enter item's name: ");
         scanner.nextLine();
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
@@ -279,10 +284,11 @@ public class interFunctions {
 
     public static void locationManagementFunc(){
         managementList SELECTED = locationManagementSelector();
+        Ergonomics.clearLines(7);
         switch (SELECTED){
             case ADD -> addLocationDataCollector();
             case DELETE -> deleteLocationDataCollector();
-            case VIEW -> viewLocationDataCollector();
+            case VIEW -> viewLocationFunc();
 
             case EDIT -> editLocationDataCollector();
             case QUIT -> {
@@ -321,7 +327,7 @@ public class interFunctions {
     }
     //subfunctions
     public static void addLocationDataCollector(){
-        System.out.println("enter location's name");
+        System.out.print("enter location's name: ");
         scanner.nextLine();
         String location = scanner.nextLine();
         Ergonomics.clearLines(1);
@@ -334,6 +340,7 @@ public class interFunctions {
         while (createdAt == null) {
             System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
+            Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
                 createdAt = LocalDate.now();
             } else {
@@ -346,14 +353,33 @@ public class interFunctions {
         }
         DatabaseManager.addLocation(location,createdAt);
     }
-    public static void viewLocationDataCollector(){
-        System.out.println("Enter name:");
-        scanner.nextLine();
-        String name = scanner.nextLine();
-        Ergonomics.clearLines(1);
-        List<Location> locationList = DatabaseManager.viewLocation(name);
+    public static void viewLocationFunc(){
+        viewLocationList option = viewLocationSelector();
+        switch(option){
+            case ALL->viewAllLocationDataCollector();
+            case DATE->{return;}
+            case QUIT->{return;}
+        }
+    }
+    public static viewLocationList viewLocationSelector() {
+        System.out.println(" 1.View all locations \n 2.View location by date period \n 0.Exit");
+        int option = scanner.nextInt();
+        switch (option) {
+            case 1 -> {
+                return viewLocationList.ALL;
+            }
+            case 2 -> {
+                return viewLocationList.DATE;
+            }
+            default -> {
+                return viewLocationList.QUIT;
+            }
+        }
+    }
+    public static void viewAllLocationDataCollector(){
+        List<Location> locationList = DatabaseManager.viewAllLocations();
         if (locationList.isEmpty()) {
-            System.out.println("this location doesn't exist in the databse");
+            System.out.println("There are no locations in the database!");
         } else {
             for (Location location : locationList) {
                 System.out.println(location.getUUID() + "|" + location.getName() + " | " + location.getDate());
@@ -361,7 +387,7 @@ public class interFunctions {
         }
     }
     public static void editLocationDataCollector() {
-        System.out.println("Enter location's name:");
+        System.out.print("Enter location's name: ");
         scanner.nextLine();
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
@@ -369,11 +395,11 @@ public class interFunctions {
             System.out.println("this location doesn't exist in the database");
             return;
         }
-        List<Location> locationProperties = DatabaseManager.viewLocation(name);
+        List<Location> locationProperties = DatabaseManager.viewLocationByName(name);
         while (locationProperties.isEmpty()) {
             System.out.println("invalid name");
             name = scanner.nextLine();
-            locationProperties = DatabaseManager.viewLocation(name);
+            locationProperties = DatabaseManager.viewLocationByName(name);
         }
 
         Location propertyList = locationProperties.getFirst();
@@ -399,7 +425,7 @@ public class interFunctions {
         DatabaseManager.editLocation(name, newName, date);
     }
     public static void deleteLocationDataCollector(){
-        System.out.println("Enter Location's name (leave it blank to cancel):");
+        System.out.print("Enter Location's name (leave it blank to cancel): ");
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
         while(name.isBlank()){
@@ -414,7 +440,7 @@ public class interFunctions {
 
 
     public static void stockinDataCollector(){
-        System.out.println("Enter item's name:");
+        System.out.print("Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
@@ -423,15 +449,15 @@ public class interFunctions {
             System.out.println("This item does not exist in the database!");
             return;
         }
-        System.out.println("Enter location's name:");
+        System.out.print("Enter location's name: ");
         String Location = scanner.nextLine();
         Ergonomics.clearLines(1);
-        List<Location> locationList = DatabaseManager.viewLocation(Location);
+        List<Location> locationList = DatabaseManager.viewLocationByName(Location);
         if(locationList.isEmpty()){
             System.out.println("This location does not exist in the database!");
             return;
         }
-        System.out.println("Enter the amount of units:");
+        System.out.print("Enter the amount of units: ");
         String stock = scanner.nextLine();
         Ergonomics.clearLines(1);
         int stockCount;
@@ -445,13 +471,15 @@ public class interFunctions {
             System.out.println("Invalid input!");
             return;
         }
-        System.out.println("note:");
+        System.out.print("note: ");
         String Note = scanner.nextLine();
+        Ergonomics.clearLines(1);
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
             System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
+            Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
                 createdAt = LocalDate.now();
             } else {
@@ -466,7 +494,7 @@ public class interFunctions {
 
     }
     public static void stockoutDataCollector(){
-        System.out.println("Enter item's name:");
+        System.out.print("Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
@@ -475,15 +503,15 @@ public class interFunctions {
             System.out.println("This item does not exist in the database!");
             return;
         }
-        System.out.println("Enter location's name:");
+        System.out.print("Enter location's name: ");
         String Location = scanner.nextLine();
         Ergonomics.clearLines(1);
-        List<Location> locationList = DatabaseManager.viewLocation(Location);
+        List<Location> locationList = DatabaseManager.viewLocationByName(Location);
         if(locationList.isEmpty()){
             System.out.println("This location does not exist in the database!");
             return;
         }
-        System.out.println("Enter the amount of units:");
+        System.out.print("Enter the amount of units: ");
         String stock = scanner.nextLine();
         Ergonomics.clearLines(1);
         int stockCount;
@@ -502,13 +530,15 @@ public class interFunctions {
             System.out.println("Invalid input!");
             return;
         }
-        System.out.println("note:");
+        System.out.print("note: ");
         String Note = scanner.nextLine();
+        Ergonomics.clearLines(1);
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
             System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
+            Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
                 createdAt = LocalDate.now();
             } else {
@@ -523,7 +553,7 @@ public class interFunctions {
 
     }
     public static void adjustStockValue(){
-        System.out.println("Enter item's name:");
+        System.out.print("Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
@@ -532,15 +562,15 @@ public class interFunctions {
             System.out.println("This item does not exist in the database!");
             return;
         }
-        System.out.println("Enter location's name:");
+        System.out.print("Enter location's name: ");
         String Location = scanner.nextLine();
         Ergonomics.clearLines(1);
-        List<Location> locationList = DatabaseManager.viewLocation(Location);
+        List<Location> locationList = DatabaseManager.viewLocationByName(Location);
         if(locationList.isEmpty()){
             System.out.println("This location does not exist in the database!");
             return;
         }
-        System.out.println("Enter the amount of units:");
+        System.out.print("Enter the amount of units: ");
         String stock = scanner.nextLine();
         Ergonomics.clearLines(1);
         int stockCount;
@@ -555,13 +585,15 @@ public class interFunctions {
             System.out.println("Invalid input!");
             return;
         }
-        System.out.println("note:");
+        System.out.print("note: ");
         String Note = scanner.nextLine();
+        Ergonomics.clearLines(1);
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
             System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
+            Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
                 createdAt = LocalDate.now();
             } else {
@@ -575,7 +607,7 @@ public class interFunctions {
         DatabaseManager.adjustStock(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
     }
     public static void viewStockLevelsDataCollector(){
-        System.out.println("Enter item's name:");
+        System.out.print("Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
@@ -630,7 +662,7 @@ public class interFunctions {
         }
     }*/
     public static void itemHistoryDataCollector(){
-        System.out.println("Enter item's name:");
+        System.out.print("Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);

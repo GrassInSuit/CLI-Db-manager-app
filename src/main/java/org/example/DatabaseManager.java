@@ -103,7 +103,7 @@ public class DatabaseManager {
             e.printStackTrace();
         }
     }
-    public static List<Location> viewLocation(String name){
+    public static List<Location> viewLocationByName(String name){
         String command = "SELECT id,name,created_at FROM locations WHERE name=?";
         List<Location> locationList = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(command)){
@@ -114,6 +114,26 @@ public class DatabaseManager {
                     execution.getString("id"),
                     execution.getString("name"),
                     execution.getString("created_at")
+                    );
+                    locationList.add(location);
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return locationList;
+    }
+    public static List<Location> viewAllLocations(){
+        String command = "SELECT id,name,created_at FROM locations";
+        List<Location> locationList = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(command)){
+            try (ResultSet execution = statement.executeQuery() ){
+                while(execution.next()){
+                    Location location = new Location(
+                            execution.getString("id"),
+                            execution.getString("name"),
+                            execution.getString("created_at")
                     );
                     locationList.add(location);
                 }
