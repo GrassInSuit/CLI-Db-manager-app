@@ -17,10 +17,10 @@ public class ContactSystem {
         public void setConnection(String URL, String name , String user , String password){
                 try {
                         String url = "jdbc:postgresql://"+ URL + "/" + name;
-                        System.out.println(url + " " + user);
-                        // Open and automatically close the connection
-                        connection = DriverManager.getConnection(url, user, "3#7GHkM%7#");
-                        System.out.println(Prefix + Ergonomics.Color.GREEN + "Connetced to postgres" + Ergonomics.Color.RESET);
+                        // Do not print sensitive connection details
+                        System.out.println(Prefix + "Connecting to database...");
+                        connection = DriverManager.getConnection(url, user, password);
+                        System.out.println(Prefix + Ergonomics.Color.GREEN + "Connected to postgres" + Ergonomics.Color.RESET);
                         isConnected=true;
                         databaseManager = new DatabaseManager(connection);
 
@@ -47,4 +47,3 @@ public class ContactSystem {
                 }
         }
         }
-
