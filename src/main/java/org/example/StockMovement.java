@@ -1,40 +1,57 @@
 package org.example;
 
-public class itemStock {
-    private int quantity_delta;
-    private String location_id;
-    private String movement_type;
-    private String reference_id;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public class StockMovement {
+
+    private UUID id;
+    private UUID itemId;
+    private UUID locationId;
+    private int quantityDelta;
+    private String movementType;
+    private UUID referenceId;
     private String note;
-    private String date;
-    public itemStock(String name, int quantity_delta, String location_id, String movement_type , String reference_id, String note , String date){
-        this.quantity_delta=quantity_delta;
-        this.location_id=location_id;
-        this.movement_type=movement_type;
-        this.reference_id=reference_id;
-        this.note=note;
-        this.date=date;
+    private LocalDateTime createdAt;
+    private String locationName; // used only by the lighter constructor, for display purposes
+
+    // Full constructor — matches the actual table structure
+    public StockMovement(UUID id, UUID itemId, UUID locationId, int quantityDelta,
+                         String movementType, UUID referenceId, String note, LocalDateTime createdAt) {
+        this.id = id;
+        this.itemId = itemId;
+        this.locationId = locationId;
+        this.quantityDelta = quantityDelta;
+        this.movementType = movementType;
+        this.referenceId = referenceId;
+        this.note = note;
+        this.createdAt = createdAt;
     }
 
-    public int getQuantityDelta() {
-        return this.quantity_delta;
+    // Lighter constructor — for display/history queries with a joined location name
+    public StockMovement(LocalDateTime createdAt, String movementType, int quantityDelta,
+                         String locationName, String note) {
+        this.createdAt = createdAt;
+        this.movementType = movementType;
+        this.quantityDelta = quantityDelta;
+        this.locationName = locationName;
+        this.note = note;
     }
 
-    public String getLocation() {
-        return this.location_id;
+    // getters
+    public UUID getId() { return id; }
+    public UUID getItemId() { return itemId; }
+    public UUID getLocationId() { return locationId; }
+    public int getQuantityDelta() { return quantityDelta; }
+    public String getMovementType() { return movementType; }
+    public UUID getReferenceId() { return referenceId; }
+    public String getNote() { return note; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getLocationName() { return locationName; }
+
+    @Override
+    public String toString() {
+        return createdAt + " | " + movementType + " | " + quantityDelta + " | " +
+                (locationName != null ? locationName : "") + " | " + note;
     }
-
-    public String getMovementType() {
-        return this.movement_type;
-    }
-
-    public String getReference_id(){return reference_id;}
-
-    public String getNote(){return note;}
-
-    public String getDate() {
-        return this.date;
-    }
-
-
 }

@@ -28,6 +28,7 @@ public class interFunctions {
                 case STOCKOUT -> stockoutDataCollector();
                 case VIEWSTOCK -> viewStockLevelsDataCollector();
                 case ADJUST -> adjustStockValue();
+                case HISTORY -> itemHistoryDataCollector();
                 case QUIT -> isMainScreen = false;
             }
         }
@@ -118,12 +119,14 @@ public class interFunctions {
         System.out.print("Enter SKU (or press enter to auto-generate): ");
         scanner.nextLine();
         String sku = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
 
         // Name (required)
         String name;
         do {
             System.out.print("Enter item name: ");
             name = scanner.nextLine().trim();
+            Ergonomics.clearLines(1);
             if (name.isEmpty()) {
                 System.out.println("Name cannot be empty.");
             }
@@ -132,6 +135,7 @@ public class interFunctions {
         // Unit (required)
         System.out.print("Enter unit of measure (each/kg/box/etc.): ");
         String unit = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
 
         // Category (optional)
         System.out.print("Enter category (optional, press enter to skip): ");
@@ -145,9 +149,10 @@ public class interFunctions {
         while (reorderPoint < 0) {
             System.out.print("Enter reorder point: ");
             String input = scanner.nextLine().trim();
+            Ergonomics.clearLines(1);
             try {
                 reorderPoint = Integer.parseInt(input);
-                if (reorderPoint < 0) {
+                if (reorderPoint < 0) {                  
                     System.out.println("Reorder point cannot be negative.");
                 }
             } catch (NumberFormatException e) {
@@ -159,6 +164,7 @@ public class interFunctions {
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
+            Ergonomics.clearLines(1);
             System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
             if (dateInput.isEmpty()) {
@@ -167,6 +173,7 @@ public class interFunctions {
                 try {
                     createdAt = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
+                    Ergonomics.clearLines(1);
                     System.out.println("Invalid date format. Use yyyy-MM-dd.");
                 }
             }
@@ -176,16 +183,20 @@ public class interFunctions {
     public static void deleteItemDataCollector(){
         System.out.println("Enter Items name (leave it blank to cancel):");
         String name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         while(name.isBlank()){
             name = scanner.nextLine();
+            Ergonomics.clearLines(1);
         }
         DatabaseManager.deleteItem(name);
     }
     public static void viewItemDataCollector(){
         System.out.println("Enter Items name (leave it blank to cancel):");
         String name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         while(name.isBlank()){
             name = scanner.nextLine();
+            Ergonomics.clearLines(1);
         }
         List<Item> itemData = DatabaseManager.viewItem(name);
         if (itemData.isEmpty()) {
@@ -202,6 +213,7 @@ public class interFunctions {
         System.out.println("Enter item's name:");
         scanner.nextLine();
         String name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         if(name.isEmpty()){
             System.out.println("this item doesn't exist in the database");
             return;
@@ -312,6 +324,7 @@ public class interFunctions {
         System.out.println("enter location's name");
         scanner.nextLine();
         String location = scanner.nextLine();
+        Ergonomics.clearLines(1);
         if (location.isBlank()){
             System.out.println("invalide input");
             return;
@@ -337,6 +350,7 @@ public class interFunctions {
         System.out.println("Enter name:");
         scanner.nextLine();
         String name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocation(name);
         if (locationList.isEmpty()) {
             System.out.println("this location doesn't exist in the databse");
@@ -350,6 +364,7 @@ public class interFunctions {
         System.out.println("Enter location's name:");
         scanner.nextLine();
         String name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         if (name.isEmpty()) {
             System.out.println("this location doesn't exist in the database");
             return;
@@ -386,8 +401,10 @@ public class interFunctions {
     public static void deleteLocationDataCollector(){
         System.out.println("Enter Location's name (leave it blank to cancel):");
         String name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         while(name.isBlank()){
             name = scanner.nextLine();
+            Ergonomics.clearLines(1);
         }
         DatabaseManager.deleteLocation(name);
     }
@@ -400,6 +417,7 @@ public class interFunctions {
         System.out.println("Enter item's name:");
         scanner.nextLine();
         String Name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
         if(itemsPropertie.isEmpty()){
             System.out.println("This item does not exist in the database!");
@@ -407,6 +425,7 @@ public class interFunctions {
         }
         System.out.println("Enter location's name:");
         String Location = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocation(Location);
         if(locationList.isEmpty()){
             System.out.println("This location does not exist in the database!");
@@ -414,6 +433,7 @@ public class interFunctions {
         }
         System.out.println("Enter the amount of units:");
         String stock = scanner.nextLine();
+        Ergonomics.clearLines(1);
         int stockCount;
         try{
             stockCount = Integer.parseInt(stock);
@@ -449,6 +469,7 @@ public class interFunctions {
         System.out.println("Enter item's name:");
         scanner.nextLine();
         String Name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
         if(itemsPropertie.isEmpty()){
             System.out.println("This item does not exist in the database!");
@@ -456,6 +477,7 @@ public class interFunctions {
         }
         System.out.println("Enter location's name:");
         String Location = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocation(Location);
         if(locationList.isEmpty()){
             System.out.println("This location does not exist in the database!");
@@ -463,6 +485,7 @@ public class interFunctions {
         }
         System.out.println("Enter the amount of units:");
         String stock = scanner.nextLine();
+        Ergonomics.clearLines(1);
         int stockCount;
         try{
             stockCount = Integer.parseInt(stock);
@@ -503,6 +526,7 @@ public class interFunctions {
         System.out.println("Enter item's name:");
         scanner.nextLine();
         String Name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
         if(itemsPropertie.isEmpty()){
             System.out.println("This item does not exist in the database!");
@@ -510,6 +534,7 @@ public class interFunctions {
         }
         System.out.println("Enter location's name:");
         String Location = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocation(Location);
         if(locationList.isEmpty()){
             System.out.println("This location does not exist in the database!");
@@ -517,6 +542,7 @@ public class interFunctions {
         }
         System.out.println("Enter the amount of units:");
         String stock = scanner.nextLine();
+        Ergonomics.clearLines(1);
         int stockCount;
         try{
             stockCount = Integer.parseInt(stock);
@@ -552,6 +578,7 @@ public class interFunctions {
         System.out.println("Enter item's name:");
         scanner.nextLine();
         String Name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
         if(itemsPropertie.isEmpty()){
             System.out.println("This item does not exist in the database!");
@@ -560,5 +587,67 @@ public class interFunctions {
         int stockLevels = DatabaseManager.viewStockLevels(itemsPropertie.getFirst().getUuid());
         System.out.println(Name+" stocks are: "+stockLevels);
     }
-
+    /*public static void transferStockDataCollector(){
+        System.out.println("Enter item's name:");
+        scanner.nextLine();
+        String Name = scanner.nextLine();
+        List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
+        if(itemsPropertie.isEmpty()){
+            System.out.println("This item does not exist in the database!");
+            return;
+        }
+        System.out.println("transfer from:");
+        String firstLocation = scanner.nextLine();
+        List<Location> firstLocationList = DatabaseManager.viewLocation(firstLocation);
+        if(firstLocationList.isEmpty()){
+            System.out.println("This location does not exist in the database!");
+            return;
+        }
+        System.out.println("transfer to:");
+        String lastLocation = scanner.nextLine();
+        List<Location> lastLocationList = DatabaseManager.viewLocation(lastLocation);
+        if(lastLocationList.isEmpty()){
+            System.out.println("This location does not exist in the database!");
+            return;
+        }
+        System.out.println("Enter amount of units");
+        String stock = scanner.nextLine();
+        int stockCount;
+        try{
+            stockCount = Integer.parseInt(stock);
+            if(stockCount <=0){
+                System.out.println("Invalide input");
+                return;
+            }
+            int stockLevels = DatabaseManager.viewStockLevels(itemsPropertie.getFirst().getUuid());
+            if(stockCount>stockLevels){
+                System.out.println("Not enough units to do this action, current available units: " + stockLevels);
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input!");
+            return;
+        }
+    }*/
+    public static void itemHistoryDataCollector(){
+        System.out.println("Enter item's name:");
+        scanner.nextLine();
+        String Name = scanner.nextLine();
+        Ergonomics.clearLines(1);
+        List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
+        if(itemsPropertie.isEmpty()){
+            System.out.println("This item does not exist in the database!");
+            return;
+        }
+        List<StockMovement> stockMovements = DatabaseManager.getItemHistory(itemsPropertie.getFirst().getUuid());
+        if (stockMovements.isEmpty()) {
+            System.out.println("No movement history found for this item.");
+        } else {
+            System.out.println("==== History " + Name + " ====");
+            System.out.println("    DATE     | type | amount | location | note");
+            for (StockMovement movement : stockMovements) {
+                System.out.println(movement);
+            }
+        }
+    }
     }

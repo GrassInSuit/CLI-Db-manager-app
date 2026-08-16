@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class DatabaseManager {
     private static Connection connection;
@@ -93,7 +94,7 @@ public class DatabaseManager {
         }
     }
     public static void deleteLocation(String Name){
-        String command = "DELETE FROM table_name WHERE name=?;";
+        String command = "DELETE FROM locations WHERE name=?;";
         try (PreparedStatement statement = connection.prepareStatement(command)){
             statement.setString(1,Name);
             int execution = statement.executeUpdate();
@@ -198,6 +199,36 @@ public class DatabaseManager {
             e.printStackTrace();
         }
         return -1;
+    }
+    public static List<StockMovement> getItemHistory(String itemId) {
+        List<StockMovement> history = new ArrayList<>();
+
+        String sql = "SELECT sm.created_at, sm.movement_type, sm.quantity_delta, l.name AS location, sm.note " +
+                "FROM stock_movements sm " +
+                "JOIN locations l ON l.id = sm.location_id " +
+                "WHERE sm.item_id = ?::pg_catalog.uuid " +
+                "ORDER BY sm.created_at DESC";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setObject(1, itemId);
+
+            try (ResultSet execution = stmt.executeQuery()) {
+                while (execution.next()) {
+                    StockMovement movement = new StockMovement(
+                            execution.getTimestamp("created_at").toLocalDateTime(),
+                            execution.getString("movement_type"),
+                            execution.getInt("quantity_delta"),
+                            execution.getString("location"),
+                            execution.getString("note")
+                    );
+                    history.add(movement);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to fetch item history", e);
+        }
+
+        return history;
     }
 }
 

@@ -11,4 +11,11 @@ public class Ergonomics {
         public static final String Prefix = BLUE + "[IMS]: " + RESET;
         public static final String Arrow = BLUE + " -> " + RESET;
     }
+    public static void clearLines(int numberOfLines) {
+    for (int i = 0; i < numberOfLines; i++) {
+        System.out.print("\033[1A"); // move cursor up one line
+        System.out.print("\033[2K"); // clear that entire line
+    }
+    System.out.flush();
+}
 }

@@ -44,7 +44,7 @@ public class Main {
                     System.out.print(Arrow + "Enter password:" + Ergonomics.Color.GREEN);
                     password = scanner.nextLine();
                 }
-                System.out.println(URL+user+name);
+            
                 connectionManager.setConnection(URL,name,user,password);
                 isConnected = connectionManager.isConnected;
 
