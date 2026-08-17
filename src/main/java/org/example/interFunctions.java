@@ -1,5 +1,6 @@
 package org.example;
 
+import javax.lang.model.util.SimpleTypeVisitor7;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -17,13 +18,29 @@ public class interFunctions {
     enum viewItemList {ALL,NAME,CATEGORY,DATE,QUIT};
     enum viewStockList {NAME,CATEGORY,DATE,LOCATION,QUIT};
     enum reportList {GLOBAL,LOCATION,QUIT};
+    private static String YELLOW = Ergonomics.Color.YELLOW;
+    private static String GREEN = Ergonomics.Color.GREEN;
+    private static String RED = Ergonomics.Color.RED;
+    private static String RESET = Ergonomics.Color.RESET;
+    private static String CYAN = Ergonomics.Color.CYAN;
+    private static String Arrow = Ergonomics.Color.Arrow;
+    private static String Prefix = Ergonomics.Color.Prefix;
+
 
     //--------------- MAIN SCREEN ---------------
 
 
     public static void mainScreenMenu(){
         Ergonomics.clearScreen();
-        System.out.println(Ergonomics.Color.CYAN + "---INVENTORY MANAGEMENT SYSTEM---" + Ergonomics.Color.RESET);
+        System.out.println(CYAN + """
+                  ██╗███╗   ███╗███████╗
+                  ██║████╗ ████║██╔════╝
+                  ██║██╔████╔██║███████╗
+                  ██║██║╚██╔╝██║╚════██║
+                  ██║██║ ╚═╝ ██║███████║
+                  ╚═╝╚═╝     ╚═╝╚══════╝
+            """ + RESET +
+                YELLOW + "   Inventory Management System" + RESET + "\n");
         boolean isMainScreen = true;
         while (isMainScreen){
             mainMenuList SELECTED = mainMenuSelector();
@@ -43,7 +60,30 @@ public class interFunctions {
         }
     }
     public static mainMenuList mainMenuSelector(){
-        System.out.println("1. Manage Items \n 2.Manage location \n 3. Stock In \n 4. Stock Out \n 5. Adjust Stock \n 6. Transfer Stock \n 7. View Stock Levels \n 8. Low Stock Report \n 9. Item History \n 0. Exit");
+        System.out.printf(
+                YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n" +
+                        YELLOW + "%-5s" + CYAN + "%-22s" + RESET + "%s%n",
+
+                "1.", "MANAGE ITEMS", "allows you to add, delete, edit and view items in your database",
+                "2.", "MANAGE LOCATIONS", "allows you to add, delete, edit and view locations in your database",
+                "3.", "STOCK IN", "used to add stock entering",
+                "4.", "STOCK OUT", "used to add stock leaving",
+                "5.", "ADJUST STOCK", "used to adjust data of an existing stock",
+                "6.", "TRANSFER STOCK", "used to transfer stock from a location to another",
+                "7.", "VIEW STOCK LEVELS", "allows you to see stock based on item name, category or date",
+                "8.", "LOW STOCK REPORTS", "shows you items that need restocking",
+                "9.", "VIEW ITEMS HISTORY", "show activities of items in the database",
+                "0.", "EXIT", "leave the app"
+        );
+
         int Option = scanner.nextInt();
         switch (Option){
             case 1-> {
@@ -99,7 +139,20 @@ public class interFunctions {
         }
     }
     public static managementList itemManagementSelector(){
-        System.out.println("1. Add Item \n2. Delete Item \n3. View Item \n4. Edit Item \n0. Exit menu");
+        System.out.printf(
+                YELLOW + "%-4s" + CYAN + "%-15s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-15s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-15s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-15s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-15s" + RESET + "%s%n",
+
+                "1.", "Add Item", "adds a new item to the database",
+                "2.", "Delete Item", "disactivated item from the database",
+                "3.", "View Item", "shows detail of an item in the database",
+                "4.", "Edit Item", "edits item's properties in the database",
+                "0.", "Exit menu", "go back to the previous menu selection"
+        );
+
         int option = scanner.nextInt();
         switch (option){
             case 1->{
@@ -187,6 +240,7 @@ public class interFunctions {
                 }
             }
             databaseManager.addItem(sku,name,unit,category,reorderPoint,createdAt);
+            Ergonomics.comfirmAction(scanner);
         }
     }
     public static void deleteItemDataCollector(){
@@ -210,7 +264,20 @@ public class interFunctions {
         }
     }
     public static viewItemList viewItemSelector() {
-        System.out.println(" 1.View all items \n 2.View item by name \n 3.View item by category \n 4.View item by date period \n 0.Exit");
+        System.out.printf(
+                YELLOW + "%-4s" + CYAN + "%-25s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-25s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-25s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-25s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-25s" + RESET + "%s%n",
+
+                "1.", "View all items", "displays every single item currently stored in the system",
+                "2.", "View item by name", "search and display specific items using their exact name",
+                "3.", "View item by category", "filter and group your items by their assigned categories",
+                "4.", "View item by date period", "track items added or updated within a specific timeframe",
+                "0.", "Exit", "go back to the previous menu selection"
+        );
+
         int option = scanner.nextInt();
         switch (option) {
             case 1 -> {
@@ -404,7 +471,20 @@ public class interFunctions {
         }
     }
     public static managementList locationManagementSelector(){
-        System.out.println("1. Add location \n2. Delete location \n3. View location \n4. Edit location \n0. Exit menu");
+        System.out.printf(
+                YELLOW + "%-4s" + CYAN + "%-20s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-20s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-20s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-20s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-20s" + RESET + "%s%n",
+
+                "1.", "Add location", "register a new storage location or warehouse site",
+                "2.", "Delete location", "remove an existing location from the system database",
+                "3.", "View location", "display the details and address of a specific location",
+                "4.", "Edit location", "update the name, details, or address of a location",
+                "0.", "Exit menu", "go back to the previous menu selection"
+        );
+
         int option = scanner.nextInt();
         switch (option){
             case 1->{
@@ -466,7 +546,16 @@ public class interFunctions {
         }
     }
     public static viewLocationList viewLocationSelector() {
-        System.out.println(" 1.View all locations \n 2.View location by date period \n 0.Exit");
+        System.out.printf(
+                YELLOW + "%-4s" + CYAN + "%-28s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-28s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-28s" + RESET + "%s%n",
+
+                "1.", "View all locations", "Displays every single location currently stored in the system",
+                "2.", "View location by date period", "Track locations added or updated within a specific timeframe",
+                "0.", "Exit", "Go back to the previous menu selection"
+        );
+
         int option = scanner.nextInt();
         switch (option) {
             case 1 -> {
@@ -765,7 +854,20 @@ public class interFunctions {
         }
     }
     public static viewStockList viewStockSelector() {
-        System.out.println(" 1.View stock by item name \n 2.View stock by category \n 3.View stock by date period \n 4.View stock by location \n 0.Exit");
+        System.out.printf(
+                YELLOW + "%-4s" + CYAN + "%-28s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-28s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-28s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-28s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-28s" + RESET + "%s%n",
+
+                "1.", "View stock by item name", "search and display current stock levels using a specific item name",
+                "2.", "View stock by category", "filter and group your current stock levels by their assigned categories",
+                "3.", "View stock by date period", "track stock levels and adjustments within a specific timeframe",
+                "4.", "View stock by location", "check and compare current stock availability across different locations",
+                "0.", "Exit", "go back to the previous menu selection"
+        );
+
         int option = scanner.nextInt();
         switch (option) {
             case 1 -> {
@@ -950,7 +1052,16 @@ public class interFunctions {
         }
     }
     public static reportList reportsSelector() {
-        System.out.println(" 1.Global low stock report \n 2.Low stock report by location \n 0.Exit");
+        System.out.printf(
+                YELLOW + "%-4s" + CYAN + "%-32s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-32s" + RESET + "%s%n" +
+                        YELLOW + "%-4s" + CYAN + "%-32s" + RESET + "%s%n",
+
+                "1.", "Global low stock report", "check items that need restocking across all warehouses",
+                "2.", "Low stock report by location", "filter items that need restocking for a specific warehouse",
+                "0.", "Exit", "go back to the previous menu selection"
+        );
+
         int option = scanner.nextInt();
         switch (option) {
             case 1 -> {
