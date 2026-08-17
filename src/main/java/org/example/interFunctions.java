@@ -940,6 +940,7 @@ public class interFunctions {
         }
         DatabaseManager.transferStock(itemsPropertie.getFirst().getUuid(),firstLocationList.getFirst().getUUID(),lastLocationList.getFirst().getUUID(),stockCount,Note,createdAt);
     }
+    
     public static void itemHistoryDataCollector(){
         System.out.print("Enter item's name: ");
         scanner.nextLine();
