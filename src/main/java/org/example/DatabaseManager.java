@@ -67,6 +67,84 @@ public class DatabaseManager {
         }
         return itemsList;
     }
+    public static List<Item> viewAllItems(){
+        List<Item> itemsList = new ArrayList<>();
+        String command = "SELECT id,sku,name,unit,category,reorder_point,created_at FROM items";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            try(ResultSet excution = statement.executeQuery()){
+                while (excution.next()) {
+                    Item item = new Item(
+                            excution.getString("id"),
+                            excution.getString("sku"),
+                            excution.getString("name"),
+                            excution.getString("unit"),
+                            excution.getString("category"),
+                            excution.getInt("reorder_point"),
+                            excution.getString("created_at")
+                    );
+                    itemsList.add(item);
+                }
+            }
+        }catch (Exception e){
+            System.err.println("view error");
+            e.printStackTrace();
+            return null;
+        }
+        return itemsList;
+    }
+    public static List<Item> viewItemByCategory(String category){
+        List<Item> itemsList = new ArrayList<>();
+        String command = "SELECT id,sku,name,unit,category,reorder_point,created_at FROM items WHERE category=?";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,category);
+            try(ResultSet excution = statement.executeQuery()){
+                while (excution.next()) {
+                    Item item = new Item(
+                            excution.getString("id"),
+                            excution.getString("sku"),
+                            excution.getString("name"),
+                            excution.getString("unit"),
+                            excution.getString("category"),
+                            excution.getInt("reorder_point"),
+                            excution.getString("created_at")
+                    );
+                    itemsList.add(item);
+                }
+            }
+        }catch (Exception e){
+            System.err.println("view error");
+            e.printStackTrace();
+            return null;
+        }
+        return itemsList;
+    }
+    public static List<Item> viewItemByDate(String startDate, String endDate){
+        List<Item> itemsList = new ArrayList<>();
+        String command = "SELECT id,sku,name,unit,category,reorder_point,created_at FROM items WHERE created_at::date BETWEEN ?::date AND ?::date";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,startDate);
+            statement.setString(2,endDate);
+            try(ResultSet excution = statement.executeQuery()){
+                while (excution.next()) {
+                    Item item = new Item(
+                            excution.getString("id"),
+                            excution.getString("sku"),
+                            excution.getString("name"),
+                            excution.getString("unit"),
+                            excution.getString("category"),
+                            excution.getInt("reorder_point"),
+                            excution.getString("created_at")
+                    );
+                    itemsList.add(item);
+                }
+            }
+        }catch (Exception e){
+            System.err.println("view error");
+            e.printStackTrace();
+            return null;
+        }
+        return itemsList;
+    }
     public static void editItem(String Name,String SKU,String newName, String Unit,String Category, int Reorder_point, String date) {
         String command = "UPDATE items SET sku=? , name=? , unit=? , category=? , reorder_point=? WHERE name=?";
         try(PreparedStatement statement = connection.prepareStatement(command)){
@@ -144,6 +222,28 @@ public class DatabaseManager {
         }
         return locationList;
     }
+    public static List<Location> viewLocationsByDate(String startDate, String endDate){
+        String command = "SELECT id,name,created_at FROM locations WHERE created_at::date BETWEEN ?::date AND ?::date";
+        List<Location> locationList = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,startDate);
+            statement.setString(2,endDate);
+            try (ResultSet execution = statement.executeQuery() ){
+                while(execution.next()){
+                    Location location = new Location(
+                            execution.getString("id"),
+                            execution.getString("name"),
+                            execution.getString("created_at")
+                    );
+                    locationList.add(location);
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return locationList;
+    }
     public static void editLocation(String Name,String newName , String date){
         String command = "UPDATE locations SET name=?,created_at=?::timestamp WHERE name=?";
         try(PreparedStatement statement = connection.prepareStatement(command)){
@@ -172,6 +272,7 @@ public class DatabaseManager {
             e.printStackTrace();
         }
     }
+
     public static void stockOut(String item_id, String location_id ,int quantity_delta, String note , String  created_at){
         String command = "INSERT INTO stock_movements(item_id,location_id,quantity_delta,movement_type,note,created_at) VALUES(?::pg_catalog.uuid,?::pg_catalog.uuid,?,?,?,?::pg_catalog.timestamp)";
         try(PreparedStatement statement = connection.prepareStatement(command)){
@@ -187,6 +288,7 @@ public class DatabaseManager {
             e.printStackTrace();
         }
     }
+
     public static void adjustStock(String item_id , String location_id,int quantity_delta ,String note,String created_at){
         String command = "INSERT INTO stock_movements (location_id, quantity_delta, movement_type, note, created_at, item_id) " +
                 "VALUES (?::pg_catalog.uuid, ?, ?, ?, ?::pg_catalog.timestamp, ?::pg_catalog.uuid)";
@@ -205,6 +307,7 @@ public class DatabaseManager {
             e.printStackTrace();
         }
     }
+
     public static int viewStockLevels(String uuid){
         String command = "SELECT SUM(quantity_delta) FROM stock_movements WHERE item_id=?::pg_catalog.uuid";
         try(PreparedStatement statement = connection.prepareStatement(command)){
@@ -220,6 +323,71 @@ public class DatabaseManager {
         }
         return -1;
     }
+    public static List<String> viewStockLevelsByCategory(String category){
+        List<String> result = new ArrayList<>();
+        String command = "SELECT i.name, COALESCE(SUM(sm.quantity_delta),0) AS stock FROM items i LEFT JOIN stock_movements sm ON sm.item_id = i.id WHERE i.category = ? GROUP BY i.name";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,category);
+            try(ResultSet execution = statement.executeQuery()){
+                while (execution.next()) {
+                    result.add(execution.getString("name") + " | " + execution.getInt("stock"));
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return result;
+    }
+    public static List<String> viewStockLevelsByLocation(String locationId){
+        List<String> result = new ArrayList<>();
+        String command = "SELECT i.name, COALESCE(SUM(sm.quantity_delta),0) AS stock FROM stock_movements sm JOIN items i ON i.id = sm.item_id WHERE sm.location_id = ?::pg_catalog.uuid GROUP BY i.name";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,locationId);
+            try(ResultSet execution = statement.executeQuery()){
+                while (execution.next()) {
+                    result.add(execution.getString("name") + " | " + execution.getInt("stock"));
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return result;
+    }
+    public static List<String> viewStockLevelsByDate(String startDate, String endDate){
+        List<String> result = new ArrayList<>();
+        String command = "SELECT i.name, COALESCE(SUM(sm.quantity_delta),0) AS stock FROM stock_movements sm JOIN items i ON i.id = sm.item_id WHERE sm.created_at::date BETWEEN ?::date AND ?::date GROUP BY i.name";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,startDate);
+            statement.setString(2,endDate);
+            try(ResultSet execution = statement.executeQuery()){
+                while (execution.next()) {
+                    result.add(execution.getString("name") + " | " + execution.getInt("stock"));
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return result;
+    }
+    public static int viewStockLevelsByItemAndLocation(String itemId, String locationId){
+        String command = "SELECT SUM(quantity_delta) FROM stock_movements WHERE item_id=?::pg_catalog.uuid AND location_id=?::pg_catalog.uuid";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,itemId);
+            statement.setString(2,locationId);
+            try (ResultSet sum = statement.executeQuery()){
+                if(sum.next()){
+                    return sum.getInt(1);
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
     public static List<StockMovement> getItemHistory(String itemId) {
         List<StockMovement> history = new ArrayList<>();
 
@@ -250,5 +418,36 @@ public class DatabaseManager {
 
         return history;
     }
+
+    public static void transferStock(String item_id , String firstLocation_id , String lastLocation_id , int quantity_delta , String note , LocalDate created_at){
+        String command = "INSERT INTO stock_movements(item_id,location_id,quantity_delta,movement_type,reference_id,note,created_at) VALUES(?::pg_catalog.uuid,?::pg_catalog.uuid,?,?,?,?::pg_catalog.uuid,?::pg_catalog.timestamp)";
+        final UUID reference_id = UUID.randomUUID();
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,item_id);
+            statement.setString(2,firstLocation_id);
+            statement.setInt(3,-quantity_delta);
+            statement.setString(4,"TRANSFER_OUT");
+            statement.setString(5, String.valueOf(reference_id));
+            statement.setString(6,note);
+            statement.setString(7,created_at.toString());
+            int execution = statement.executeUpdate();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,item_id);
+            statement.setString(2,lastLocation_id);
+            statement.setInt(3,quantity_delta);
+            statement.setString(4,"TRANSFER_IN");
+            statement.setString(5,reference_id.toString());
+            statement.setString(6,note);
+            statement.setString(7,created_at.toString());
+            int execution = statement.executeUpdate();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        System.out.println("Transfer was successful!");
+    }
+
 }
 
