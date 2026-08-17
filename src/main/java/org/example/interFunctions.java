@@ -16,7 +16,7 @@ public class interFunctions {
     enum viewLocationList {ALL,DATE,QUIT};
     enum viewItemList {ALL,NAME,CATEGORY,DATE,QUIT};
     enum viewStockList {NAME,CATEGORY,DATE,LOCATION,QUIT};
-
+    enum reportList {GLOBAL,LOCATION,QUIT};
 
     //--------------- MAIN SCREEN ---------------
 
@@ -36,8 +36,8 @@ public class interFunctions {
                 case VIEWSTOCK -> viewStockFunc();
                 case ADJUST -> adjustStockValue();
                 case TRANSFER -> transferStockDataCollector();
+                case REPORTS -> reportsFunc();
                 case HISTORY -> itemHistoryDataCollector();
-
                 case QUIT -> isMainScreen = false;
             }
         }
@@ -940,7 +940,62 @@ public class interFunctions {
         }
         DatabaseManager.transferStock(itemsPropertie.getFirst().getUuid(),firstLocationList.getFirst().getUUID(),lastLocationList.getFirst().getUUID(),stockCount,Note,createdAt);
     }
-    
+
+    public static void reportsFunc(){
+        reportList option = reportsSelector();
+        switch(option){
+            case GLOBAL->lowStockReportDataCollector();
+            case LOCATION->lowStockByLocationDataCollector();
+            case QUIT->{return;}
+        }
+    }
+    public static reportList reportsSelector() {
+        System.out.println(" 1.Global low stock report \n 2.Low stock report by location \n 0.Exit");
+        int option = scanner.nextInt();
+        switch (option) {
+            case 1 -> {
+                return reportList.GLOBAL;
+            }
+            case 2 -> {
+                return reportList.LOCATION;
+            }
+            default -> {
+                return reportList.QUIT;
+            }
+        }
+    }
+    public static void lowStockReportDataCollector(){
+        List<String> lowStockItems = DatabaseManager.getLowStockItems();
+        if (lowStockItems.isEmpty()) {
+            System.out.println("No items are below their reorder point.");
+        } else {
+            System.out.println("==== Low Stock Report ====");
+            for (String line : lowStockItems) {
+                System.out.println(line);
+            }
+        }
+    }
+    public static void lowStockByLocationDataCollector(){
+        scanner.nextLine();
+        System.out.print(Prefix + "Enter location's name: ");
+        String locationName = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
+        List<Location> locationList = DatabaseManager.viewLocationByName(locationName);
+        if(locationList.isEmpty()){
+            System.out.println("This location does not exist in the database!");
+            return;
+        }
+        List<String> lowStockItems = DatabaseManager.getLowStockItemsByLocation(locationList.getFirst().getUUID());
+        if (lowStockItems.isEmpty()) {
+            System.out.println("No items are below their reorder point at this location.");
+        } else {
+            System.out.println("==== Low Stock Report: " + locationName + " ====");
+            for (String line : lowStockItems) {
+                System.out.println(line);
+            }
+        }
+    }
+
     public static void itemHistoryDataCollector(){
         System.out.print("Enter item's name: ");
         scanner.nextLine();

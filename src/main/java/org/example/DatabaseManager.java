@@ -388,6 +388,38 @@ public class DatabaseManager {
         return -1;
     }
 
+    public static List<String> getLowStockItemsByLocation(String locationId){
+        List<String> result = new ArrayList<>();
+        String command = "SELECT i.name, i.reorder_point, COALESCE(SUM(sm.quantity_delta),0) AS stock FROM items i LEFT JOIN stock_movements sm ON sm.item_id = i.id AND sm.location_id = ?::pg_catalog.uuid GROUP BY i.name, i.reorder_point HAVING COALESCE(SUM(sm.quantity_delta),0) < i.reorder_point";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            statement.setString(1,locationId);
+            try(ResultSet execution = statement.executeQuery()){
+                while (execution.next()) {
+                    result.add(execution.getString("name") + " | current stock: " + execution.getInt("stock") + " | reorder point: " + execution.getInt("reorder_point"));
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return result;
+    }
+    public static List<String> getLowStockItems(){
+        List<String> result = new ArrayList<>();
+        String command = "SELECT i.name, i.reorder_point, COALESCE(SUM(sm.quantity_delta),0) AS stock FROM items i LEFT JOIN stock_movements sm ON sm.item_id = i.id GROUP BY i.name, i.reorder_point HAVING COALESCE(SUM(sm.quantity_delta),0) < i.reorder_point";
+        try(PreparedStatement statement = connection.prepareStatement(command)){
+            try(ResultSet execution = statement.executeQuery()){
+                while (execution.next()) {
+                    result.add(execution.getString("name") + " | current stock: " + execution.getInt("stock") + " | reorder point: " + execution.getInt("reorder_point"));
+                }
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return result;
+    }
+
     public static List<StockMovement> getItemHistory(String itemId) {
         List<StockMovement> history = new ArrayList<>();
 
@@ -420,8 +452,7 @@ public class DatabaseManager {
     }
 
     public static void transferStock(String item_id , String firstLocation_id , String lastLocation_id , int quantity_delta , String note , LocalDate created_at){
-        String command = "INSERT INTO stock_movements(item_id,location_id,quantity_delta,movement_type,reference_id,note,created_at) VALUES(?::pg_catalog.uuid,?::pg_catalog.uuid,?,?,?,?::pg_catalog.uuid,?::pg_catalog.timestamp)";
-        final UUID reference_id = UUID.randomUUID();
+        String command = "INSERT INTO stock_movements(item_id,location_id,quantity_delta,movement_type,reference_id,note,created_at) VALUES(?::pg_catalog.uuid,?::pg_catalog.uuid,?,?,?::pg_catalog.uuid,?,?::pg_catalog.timestamp)";        final UUID reference_id = UUID.randomUUID();
         try(PreparedStatement statement = connection.prepareStatement(command)){
             statement.setString(1,item_id);
             statement.setString(2,firstLocation_id);
@@ -448,6 +479,5 @@ public class DatabaseManager {
         }
         System.out.println("Transfer was successful!");
     }
-
 }
 
