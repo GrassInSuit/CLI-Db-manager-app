@@ -11,6 +11,7 @@ public class Ergonomics {
     public static final String Prefix = Color.CYAN + "[IMS]:" + Color.RESET;
     public static final String Error = Color.RED + "[ERROR]: " + Color.RESET;
     public static final String Arrow = Color.CYAN + " -> " + Color.RESET;
+    private static Terminal terminal;
     public static class Color{
         public static final String RESET = "\u001B[0m";
         public static final String RED = "\u001B[31m";
@@ -38,18 +39,24 @@ public class Ergonomics {
         return input.equalsIgnoreCase("Y");
     }
     public static void waitAnyKey() {
-        System.out.println(Prefix+"Press any key to proceed...");
+        System.out.println(Prefix + "Press any key to proceed...");
         System.out.flush();
 
-        try (Terminal terminal = TerminalBuilder.terminal()) {
-
-            terminal.enterRawMode();
-
-            Reader reader = terminal.reader();
-            reader.read();
-
-        } catch (Exception e) {
-            System.err.println(Error+ "\nreading the terminal gone wrong : " + e.getMessage());
+        if (terminal != null) {
+            Attributes originalAttributes = terminal.enterRawMode();
+            try {
+                Reader reader = terminal.reader();
+                reader.read();
+            } catch (Exception e) {
+                System.err.println("\nErreur lors de la lecture du terminal : " + e.getMessage());
+            } finally {
+                terminal.setAttributes(originalAttributes);
+            }
+        } else {
+            try {
+                System.in.read();
+            } catch (Exception e) {
+            }
         }
     }
 }
