@@ -9,10 +9,12 @@ import java.util.UUID;
 
 public class DatabaseManager {
     private static Connection connection;
+    public static String user;
     final String Prefix = Ergonomics.Color.Prefix;
     final String Arrow = Ergonomics.Color.Arrow;
-    public DatabaseManager(Connection conn){
+    public DatabaseManager(Connection conn, String user){
         this.connection = conn;
+        this.user=user;
     }
 
     public static void addItem(String SKU, String Name, String Unit, String Category , int Reorder_point , LocalDate date){

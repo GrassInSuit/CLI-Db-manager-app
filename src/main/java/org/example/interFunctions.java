@@ -23,8 +23,6 @@ public class interFunctions {
     private static String RED = Ergonomics.Color.RED;
     private static String RESET = Ergonomics.Color.RESET;
     private static String CYAN = Ergonomics.Color.CYAN;
-    private static String Arrow = Ergonomics.Color.Arrow;
-    private static String Prefix = Ergonomics.Color.Prefix;
 
 
     //--------------- MAIN SCREEN ---------------
@@ -215,7 +213,7 @@ public class interFunctions {
             Ergonomics.clearLines(1);
             try {
                 reorderPoint = Integer.parseInt(input);
-                if (reorderPoint < 0) {                  
+                if (reorderPoint < 0) {
                     System.out.println(Prefix + "Reorder point cannot be negative.");
                 }
             } catch (NumberFormatException e) {
@@ -239,9 +237,12 @@ public class interFunctions {
                     System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
                 }
             }
-            databaseManager.addItem(sku,name,unit,category,reorderPoint,createdAt);
-            Ergonomics.comfirmAction(scanner);
         }
+        System.out.println(sku + " | " + name + " | " + unit + " | " + category + " | " + reorderPoint + " | " + createdAt);
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
+        }
+        databaseManager.addItem(sku,name,unit,category,reorderPoint,createdAt);
     }
     public static void deleteItemDataCollector(){
         System.out.print("Enter Items name (leave it blank to cancel): ");
@@ -250,6 +251,17 @@ public class interFunctions {
         while(name.isBlank()){
             name = scanner.nextLine();
             Ergonomics.clearLines(1);
+        }
+        List<Item> itemsPropertie = DatabaseManager.viewItem(name);
+        if(itemsPropertie.isEmpty()){
+            System.out.println("This item does not exist in the database!");
+            return;
+        }
+        Item item = itemsPropertie.getFirst();
+        System.out.println(item.getUuid() + "|" + item.getSku() + " | " + item.getName() + " | " + item.getUnit() +
+                " | " + item.getCategory() + " | " + item.getReorderPoint() + " | " + item.getCreatedAt());
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
         }
         DatabaseManager.deleteItem(name);
     }
@@ -400,53 +412,56 @@ public class interFunctions {
             itemProperties = DatabaseManager.viewItem(name);
         }
 
-            Item propertyList = itemProperties.getFirst();
+        Item propertyList = itemProperties.getFirst();
 
-            String sku = propertyList.getSku();
-            String newName = propertyList.getName();
-            String unit = propertyList.getUnit();
-            String category = propertyList.getCategory();
-            int reorderPoint = propertyList.getReorderPoint();
-            String createdAt = propertyList.getCreatedAt();
+        String sku = propertyList.getSku();
+        String newName = propertyList.getName();
+        String unit = propertyList.getUnit();
+        String category = propertyList.getCategory();
+        int reorderPoint = propertyList.getReorderPoint();
+        String createdAt = propertyList.getCreatedAt();
 
-            System.out.println("\n--- UPDATE ITEM (Press ENTER to keep current value) ---");
-            System.out.print("New name [" + sku + "]: ");
-            String inputSku = scanner.nextLine().trim();
-            if (!inputSku.isEmpty()) {
-                sku = inputSku;
-            }
-
-            System.out.print("New name [" + newName + "]: ");
-            String inputName = scanner.nextLine().trim();
-            if (!inputName.isEmpty()) {
-                newName = inputName;
-            }
-
-            System.out.print("New unit [" + unit + "]: ");
-            String inputUnit = scanner.nextLine().trim();
-            if (!inputUnit.isEmpty()) {
-                unit = inputUnit;
-            }
-
-            System.out.print("New category [" + category + "]: ");
-            String inputCategory = scanner.nextLine().trim();
-            if (!inputCategory.isEmpty()) {
-                category = inputCategory;
-            }
-            System.out.print("New reorder point [" + reorderPoint + "]: ");
-            String inputReorder = scanner.nextLine();
-            if (!inputReorder.isEmpty()) {
-                try {
-                    reorderPoint = Integer.parseInt(inputReorder);
-                } catch (NumberFormatException e) {
-                    System.out.println("invalid input (Not a number)");
-                    return;
-                }
-            }
-            System.out.println("\nItem properties updated in memory:");
-            System.out.println(sku + " | " + newName + " | " + unit + " | " + category + " | " + reorderPoint + " | " + createdAt);
-            DatabaseManager.editItem(name,sku,newName,unit,category,reorderPoint,createdAt);
+        System.out.println("\n--- UPDATE ITEM (Press ENTER to keep current value) ---");
+        System.out.print("New name [" + sku + "]: ");
+        String inputSku = scanner.nextLine().trim();
+        if (!inputSku.isEmpty()) {
+            sku = inputSku;
         }
+
+        System.out.print("New name [" + newName + "]: ");
+        String inputName = scanner.nextLine().trim();
+        if (!inputName.isEmpty()) {
+            newName = inputName;
+        }
+
+        System.out.print("New unit [" + unit + "]: ");
+        String inputUnit = scanner.nextLine().trim();
+        if (!inputUnit.isEmpty()) {
+            unit = inputUnit;
+        }
+
+        System.out.print("New category [" + category + "]: ");
+        String inputCategory = scanner.nextLine().trim();
+        if (!inputCategory.isEmpty()) {
+            category = inputCategory;
+        }
+        System.out.print("New reorder point [" + reorderPoint + "]: ");
+        String inputReorder = scanner.nextLine();
+        if (!inputReorder.isEmpty()) {
+            try {
+                reorderPoint = Integer.parseInt(inputReorder);
+            } catch (NumberFormatException e) {
+                System.out.println("invalid input (Not a number)");
+                return;
+            }
+        }
+        System.out.println("\nItem properties updated in memory:");
+        System.out.println(sku + " | " + newName + " | " + unit + " | " + category + " | " + reorderPoint + " | " + createdAt);
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
+        }
+        DatabaseManager.editItem(name,sku,newName,unit,category,reorderPoint,createdAt);
+    }
 
 
     //--------------- MANAGE LOCATIONS ---------------
@@ -533,6 +548,10 @@ public class interFunctions {
                     System.out.println("Invalid date format. Use yyyy-MM-dd.");
                 }
             }
+        }
+        System.out.println(location + " | " + createdAt);
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
         }
         DatabaseManager.addLocation(location,createdAt);
     }
@@ -657,6 +676,9 @@ public class interFunctions {
 
         System.out.println("\nLocation properties updated in memory:");
         System.out.println(newName + " | " + date);
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
+        }
         DatabaseManager.editLocation(name, newName, date);
     }
     public static void deleteLocationDataCollector(){
@@ -666,6 +688,16 @@ public class interFunctions {
         while(name.isBlank()){
             name = scanner.nextLine();
             Ergonomics.clearLines(1);
+        }
+        List<Location> locationList = DatabaseManager.viewLocationByName(name);
+        if(locationList.isEmpty()){
+            System.out.println("This location does not exist in the database!");
+            return;
+        }
+        Location location = locationList.getFirst();
+        System.out.println(location.getUUID() + "|" + location.getName() + " | " + location.getDate());
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
         }
         DatabaseManager.deleteLocation(name);
     }
@@ -727,6 +759,10 @@ public class interFunctions {
                 }
             }
         }
+        System.out.println(Name + " | " + Location + " | " + stockCount + " | " + Note + " | " + createdAt);
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
+        }
         DatabaseManager.stockIn(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
 
     }
@@ -786,6 +822,10 @@ public class interFunctions {
                 }
             }
         }
+        System.out.println(Name + " | " + Location + " | " + stockCount + " | " + Note + " | " + createdAt);
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
+        }
         DatabaseManager.stockOut(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
 
     }
@@ -840,6 +880,10 @@ public class interFunctions {
                     System.out.println("Invalid date format. Use yyyy-MM-dd.");
                 }
             }
+        }
+        System.out.println(Name + " | " + Location + " | " + stockCount + " | " + Note + " | " + createdAt);
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
         }
         DatabaseManager.adjustStock(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
     }
@@ -1014,7 +1058,7 @@ public class interFunctions {
             }
             int stockLevels = DatabaseManager.viewStockLevelsByItemAndLocation(itemsPropertie.getFirst().getUuid(), firstLocationList.getFirst().getUUID());
             if(stockCount>stockLevels){
-                System.out.println("Not enough units available in "+ firstLocation +", current available units are: " + stockLevels); 
+                System.out.println("Not enough units available in "+ firstLocation +", current available units are: " + stockLevels);
                 return;
             }
         } catch (NumberFormatException e) {
@@ -1039,6 +1083,10 @@ public class interFunctions {
                     System.out.println("Invalid date format. Use yyyy-MM-dd.");
                 }
             }
+        }
+        System.out.println(Name + " | " + firstLocation + " -> " + lastLocation + " | " + stockCount + " | " + Note + " | " + createdAt);
+        if (!Ergonomics.comfirmAction(scanner)) {
+            return;
         }
         DatabaseManager.transferStock(itemsPropertie.getFirst().getUuid(),firstLocationList.getFirst().getUUID(),lastLocationList.getFirst().getUUID(),stockCount,Note,createdAt);
     }
@@ -1128,4 +1176,4 @@ public class interFunctions {
             }
         }
     }
-    }
+}

@@ -21,6 +21,7 @@ public class Main {
 
         //Simple login system for the postgres database (URL, Database's name , user , password)
         while(!isConnected){
+            Ergonomics.clearScreen();
             System.out.println(Ergonomics.Color.YELLOW + "---Welcome to IMS---" + Ergonomics.Color.RESET);
             System.out.println(Prefix + "Connecting to your Database:");
                 System.out.print(Arrow + "Enter Database URL " + Ergonomics.Color.YELLOW +"(default: localhost:5432):" + Ergonomics.Color.RESET);

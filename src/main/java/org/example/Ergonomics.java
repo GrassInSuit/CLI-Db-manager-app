@@ -20,17 +20,15 @@ public class Ergonomics {
             System.out.print("\033[1A"); // move cursor up one line
             System.out.print("\033[2K"); // clear that entire line
         }
-    System.out.flush();
+        System.out.flush();
     }
     public static void clearScreen() {
-    System.out.print("\033[H\033[2J");
-    System.out.flush();
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
     }
-    public static void comfirmAction(Scanner scanner){
-        System.out.println(Color.Arrow + Color.YELLOW + "Proceed? [y/N]: " + Color.RESET);
-        String input = scanner.nextLine().toUpperCase();
-        if (String.valueOf(input) != "Y"){
-            return;
-        }
+    public static boolean comfirmAction(Scanner scanner){
+        System.out.print(Color.Arrow + Color.YELLOW + "Proceed? [y/N]: " + Color.RESET);
+        String input = scanner.nextLine().trim();
+        return input.equalsIgnoreCase("Y");
     }
 }

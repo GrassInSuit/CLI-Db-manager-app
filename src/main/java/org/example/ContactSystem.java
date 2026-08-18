@@ -22,7 +22,7 @@ public class ContactSystem {
                         connection = DriverManager.getConnection(url, user, password);
                         System.out.println(Prefix + Ergonomics.Color.GREEN + "Connected to postgres" + Ergonomics.Color.RESET);
                         isConnected=true;
-                        databaseManager = new DatabaseManager(connection);
+                        databaseManager = new DatabaseManager(connection,user);
 
                         } catch (SQLException e) {
                                 System.out.println(Ergonomics.Color.RED + "ERROR"+ Ergonomics.Color.RESET +": connection to the database failed, please check your user information");
