@@ -10,8 +10,8 @@ import java.util.UUID;
 public class DatabaseManager {
     private static Connection connection;
     public static String user;
-    final String Prefix = Ergonomics.Color.Prefix;
-    final String Arrow = Ergonomics.Color.Arrow;
+    final String Prefix = Ergonomics.Prefix;
+    final String Arrow = Ergonomics.Arrow;
     public DatabaseManager(Connection conn, String user){
         this.connection = conn;
         this.user=user;

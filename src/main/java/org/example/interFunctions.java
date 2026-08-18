@@ -11,7 +11,8 @@ import java.util.Scanner;
 public class interFunctions {
     final private static DatabaseManager databaseManager = ContactSystem.databaseManager;
     private final static Scanner scanner = new Scanner(System.in);
-    private final static String Prefix = Ergonomics.Color.Prefix;
+    private final static String Prefix = Ergonomics.Prefix;
+    private final static String Error = Ergonomics.Error;
     enum mainMenuList {ITEMS,LOCATION,STOCKIN,STOCKOUT,ADJUST,TRANSFER,VIEWSTOCK,REPORTS,HISTORY,QUIT}
     enum managementList {ADD,DELETE,VIEW,EDIT,QUIT};
     enum viewLocationList {ALL,DATE,QUIT};
@@ -169,7 +170,9 @@ public class interFunctions {
                 return managementList.QUIT;
             }
             default -> {
-                System.out.println("Invalid choice!");
+                System.out.println(Error + "Invalid choice!");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return managementList.QUIT;
             }
         }
@@ -184,11 +187,13 @@ public class interFunctions {
         // Name (required)
         String name;
         do {
-            System.out.print("Enter item name: ");
+            System.out.print(Prefix + "Enter item name: ");
             name = scanner.nextLine().trim();
             Ergonomics.clearLines(1);
             if (name.isEmpty()) {
-                System.out.println("Name cannot be empty.");
+                System.out.println(Error + "Name cannot be empty.");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
             }
         } while (name.isEmpty());
 
@@ -208,16 +213,20 @@ public class interFunctions {
         // Reorder point (required, must be a non-negative integer)
         int reorderPoint = -1;
         while (reorderPoint < 0) {
-            System.out.print("Enter reorder point: ");
+            System.out.print(Prefix + "Enter reorder point: ");
             String input = scanner.nextLine().trim();
             Ergonomics.clearLines(1);
             try {
                 reorderPoint = Integer.parseInt(input);
                 if (reorderPoint < 0) {
-                    System.out.println(Prefix + "Reorder point cannot be negative.");
+                    System.out.println(Error + "Reorder point cannot be negative.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             } catch (NumberFormatException e) {
-                System.out.println(Prefix + "Please enter a valid number.");
+                System.out.println(Error + "Please enter a valid number.");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
             }
         }
 
@@ -234,18 +243,30 @@ public class interFunctions {
                 try {
                     createdAt = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
-        System.out.println(sku + " | " + name + " | " + unit + " | " + category + " | " + reorderPoint + " | " + createdAt);
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + " --- Confirm Item Details ---" + RESET);
+        System.out.println(Prefix + CYAN + " SKU: " + RESET + sku + CYAN + " | Name: " + RESET + name + CYAN + " | Unit: " + RESET + unit + CYAN + " | Category: " + RESET + category + CYAN + " | Reorder: " + RESET + reorderPoint + CYAN + " | Date: " + RESET + createdAt);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3);
+
+        if (!confirmed) {
             return;
         }
+
         databaseManager.addItem(sku,name,unit,category,reorderPoint,createdAt);
+        System.out.println(Prefix + GREEN + "Item added successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
     public static void deleteItemDataCollector(){
-        System.out.print("Enter Items name (leave it blank to cancel): ");
+        System.out.print(Prefix + "Enter Items name (leave it blank to cancel): ");
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
         while(name.isBlank()){
@@ -254,16 +275,27 @@ public class interFunctions {
         }
         List<Item> itemsPropertie = DatabaseManager.viewItem(name);
         if(itemsPropertie.isEmpty()){
-            System.out.println("This item does not exist in the database!");
+            System.out.println(Error + "This item does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
         Item item = itemsPropertie.getFirst();
-        System.out.println(item.getUuid() + "|" + item.getSku() + " | " + item.getName() + " | " + item.getUnit() +
-                " | " + item.getCategory() + " | " + item.getReorderPoint() + " | " + item.getCreatedAt());
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + " --- Confirm Item Deletion ---" + RESET);
+        System.out.println(Prefix + RED + " UUID: " + RESET + item.getUuid() + RED + " | SKU: " + RESET + item.getSku() + RED + " | Name: " + RESET + item.getName() + RED + " | Unit: " + RESET + item.getUnit() + RED + " | Category: " + RESET + item.getCategory() + RED + " | Reorder: " + RESET + item.getReorderPoint() + RED + " | Date: " + RESET + item.getCreatedAt());
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3);
+
+        if (!confirmed) {
             return;
         }
+
         DatabaseManager.deleteItem(name);
+        System.out.println(Prefix + GREEN + "Item deleted successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
     public static void viewItemFunc(){
         viewItemList option = viewItemSelector();
@@ -304,6 +336,9 @@ public class interFunctions {
             case 4 -> {
                 return viewItemList.DATE;
             }
+            case 0 -> {
+                return viewItemList.QUIT;
+            }
             default -> {
                 return viewItemList.QUIT;
             }
@@ -311,32 +346,44 @@ public class interFunctions {
     }
     public static void viewAllItemDataCollector(){
         List<Item> itemData = DatabaseManager.viewAllItems();
+        int linesPrinted = 0;
         if (itemData.isEmpty()) {
-            System.out.println("There are no items in the database!");
+            System.out.println(Error + "There are no items in the database!");
+            linesPrinted++;
         } else {
             for (Item item : itemData) {
                 System.out.println(item.getUuid() + "|" + item.getSku() + " | " + item.getName() + " | " + item.getUnit() +
                         " | " + item.getCategory() + " | " + item.getReorderPoint() + " | " + item.getCreatedAt());
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void viewItemDataCollector(){
         scanner.nextLine();
-        System.out.print("Enter Items name (leave it blank to cancel): ");
+        System.out.print(Prefix + "Enter Items name (leave it blank to cancel): ");
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
         if (name.isBlank()) {
             return;
         }
         List<Item> itemData = DatabaseManager.viewItem(name);
+        int linesPrinted = 0;
         if (itemData.isEmpty()) {
-            System.out.println("This item does not exist in the database!");
+            System.out.println(Error + "This item does not exist in the database!");
+            linesPrinted++;
         } else {
             for (Item item : itemData) {
                 System.out.println(item.getUuid() + "|" + item.getSku() + " | " + item.getName() + " | " + item.getUnit() +
                         " | " + item.getCategory() + " | " + item.getReorderPoint() + " | " + item.getCreatedAt());
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void viewItemByCategoryDataCollector(){
         scanner.nextLine();
@@ -344,14 +391,20 @@ public class interFunctions {
         String category = scanner.nextLine().trim();
         Ergonomics.clearLines(1);
         List<Item> itemData = DatabaseManager.viewItemByCategory(category);
+        int linesPrinted = 0;
         if (itemData.isEmpty()) {
-            System.out.println("There are no items in this category!");
+            System.out.println(Error + "There are no items in this category!");
+            linesPrinted++;
         } else {
             for (Item item : itemData) {
                 System.out.println(item.getUuid() + "|" + item.getSku() + " | " + item.getName() + " | " + item.getUnit() +
                         " | " + item.getCategory() + " | " + item.getReorderPoint() + " | " + item.getCreatedAt());
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void viewItemByDateDataCollector(){
         scanner.nextLine();
@@ -367,7 +420,9 @@ public class interFunctions {
                 try {
                     startDate = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
@@ -382,33 +437,47 @@ public class interFunctions {
                 try {
                     endDate = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
         List<Item> itemData = DatabaseManager.viewItemByDate(startDate.toString(), endDate.toString());
+        int linesPrinted = 0;
         if (itemData.isEmpty()) {
-            System.out.println("There are no items in the database for this date range!");
+            System.out.println(Error + "There are no items in the database for this date range!");
+            linesPrinted++;
         } else {
             for (Item item : itemData) {
                 System.out.println(item.getUuid() + "|" + item.getSku() + " | " + item.getName() + " | " + item.getUnit() +
                         " | " + item.getCategory() + " | " + item.getReorderPoint() + " | " + item.getCreatedAt());
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void EditItemDataCollector(){
-        System.out.print("Enter item's name: ");
+        System.out.print(Prefix + "Enter item's name: ");
         scanner.nextLine();
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
         if(name.isEmpty()){
-            System.out.println("this item doesn't exist in the database");
+            System.out.println(Error + "this item doesn't exist in the database");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
         List<Item> itemProperties = DatabaseManager.viewItem(name);
         while(itemProperties.isEmpty()){
-            System.out.println("invalid name");
+            System.out.println(Error + "invalid name");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
+            System.out.print(Prefix + "Enter item's name: ");
             name = scanner.nextLine();
+            Ergonomics.clearLines(1);
             itemProperties = DatabaseManager.viewItem(name);
         }
 
@@ -421,46 +490,62 @@ public class interFunctions {
         int reorderPoint = propertyList.getReorderPoint();
         String createdAt = propertyList.getCreatedAt();
 
-        System.out.println("\n--- UPDATE ITEM (Press ENTER to keep current value) ---");
-        System.out.print("New name [" + sku + "]: ");
+        System.out.println(Prefix + YELLOW + "\n--- UPDATE ITEM (Press ENTER to keep current value) ---" + RESET);
+        System.out.print(Prefix + "New SKU [" + sku + "]: ");
         String inputSku = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
         if (!inputSku.isEmpty()) {
             sku = inputSku;
         }
 
-        System.out.print("New name [" + newName + "]: ");
+        System.out.print(Prefix + "New name [" + newName + "]: ");
         String inputName = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
         if (!inputName.isEmpty()) {
             newName = inputName;
         }
 
-        System.out.print("New unit [" + unit + "]: ");
+        System.out.print(Prefix + "New unit [" + unit + "]: ");
         String inputUnit = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
         if (!inputUnit.isEmpty()) {
             unit = inputUnit;
         }
 
-        System.out.print("New category [" + category + "]: ");
+        System.out.print(Prefix + "New category [" + category + "]: ");
         String inputCategory = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
         if (!inputCategory.isEmpty()) {
             category = inputCategory;
         }
-        System.out.print("New reorder point [" + reorderPoint + "]: ");
+        System.out.print(Prefix + "New reorder point [" + reorderPoint + "]: ");
         String inputReorder = scanner.nextLine();
+        Ergonomics.clearLines(1);
         if (!inputReorder.isEmpty()) {
             try {
                 reorderPoint = Integer.parseInt(inputReorder);
             } catch (NumberFormatException e) {
-                System.out.println("invalid input (Not a number)");
+                System.out.println(Error + "invalid input (Not a number)");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2 + 2); // 2 lines error + header
                 return;
             }
         }
-        System.out.println("\nItem properties updated in memory:");
-        System.out.println(sku + " | " + newName + " | " + unit + " | " + category + " | " + reorderPoint + " | " + createdAt);
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + "\n --- Confirm Updated Details ---" + RESET);
+        System.out.println(Prefix + CYAN + " SKU: " + RESET + sku + CYAN + " | Name: " + RESET + newName + CYAN + " | Unit: " + RESET + unit + CYAN + " | Category: " + RESET + category + CYAN + " | Reorder: " + RESET + reorderPoint + CYAN + " | Date: " + RESET + createdAt);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3 + 2); // clear confirmation block + header lines
+
+        if (!confirmed) {
             return;
         }
+
         DatabaseManager.editItem(name,sku,newName,unit,category,reorderPoint,createdAt);
+        System.out.println(Prefix + GREEN + "Item updated successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
 
 
@@ -480,7 +565,9 @@ public class interFunctions {
                 return;
             }
             default -> {
-                System.out.println("invalid input");
+                System.out.println(Error + "invalid input");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return;
             }
         }
@@ -514,29 +601,33 @@ public class interFunctions {
             case 4->{
                 return managementList.EDIT;
             }
-            case 5->{
+            case 0->{
                 return managementList.QUIT;
             }
             default -> {
-                System.out.println("Invalid choice!");
+                System.out.println(Error + "Invalid choice!");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return managementList.QUIT;
             }
         }
     }
     //subfunctions
     public static void addLocationDataCollector(){
-        System.out.print("enter location's name: ");
+        System.out.print(Prefix + "Enter location's name: ");
         scanner.nextLine();
         String location = scanner.nextLine();
         Ergonomics.clearLines(1);
         if (location.isBlank()){
-            System.out.println("invalide input");
+            System.out.println(Error + "invalide input");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
-            System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
+            System.out.print(Prefix + "Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
             Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
@@ -545,15 +636,27 @@ public class interFunctions {
                 try {
                     createdAt = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println("Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
-        System.out.println(location + " | " + createdAt);
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + " --- Confirm Location Details ---" + RESET);
+        System.out.println(Prefix + CYAN + " Location: " + RESET + location + CYAN + " | Date: " + RESET + createdAt);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3);
+
+        if (!confirmed) {
             return;
         }
+
         DatabaseManager.addLocation(location,createdAt);
+        System.out.println(Prefix + GREEN + "Location added successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
     //----------------- VIEW LOCATION --------------------
     public static void viewLocationFunc(){
@@ -583,6 +686,9 @@ public class interFunctions {
             case 2 -> {
                 return viewLocationList.DATE;
             }
+            case 0->{
+                return viewLocationList.QUIT;
+            }
             default -> {
                 return viewLocationList.QUIT;
             }
@@ -590,13 +696,19 @@ public class interFunctions {
     }
     public static void viewAllLocationDataCollector(){
         List<Location> locationList = DatabaseManager.viewAllLocations();
+        int linesPrinted = 0;
         if (locationList.isEmpty()) {
-            System.out.println("There are no locations in the database!");
+            System.out.println(Error + "There are no locations in the database!");
+            linesPrinted++;
         } else {
             for (Location location : locationList) {
                 System.out.println(location.getUUID() + "|" + location.getName() + " | " + location.getDate());
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void viewLocationByDateDataCollector(){
         scanner.nextLine();
@@ -612,7 +724,9 @@ public class interFunctions {
                 try {
                     startDate = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
@@ -627,32 +741,46 @@ public class interFunctions {
                 try {
                     endDate = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
         List<Location> locationList = DatabaseManager.viewLocationsByDate(startDate.toString(), endDate.toString());
+        int linesPrinted = 0;
         if (locationList.isEmpty()) {
-            System.out.println("There are no locations in the database for this date range!");
+            System.out.println(Error + "There are no locations in the database for this date range!");
+            linesPrinted++;
         } else {
             for (Location location : locationList) {
                 System.out.println(location.getUUID() + "|" + location.getName() + " | " + location.getDate());
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void editLocationDataCollector() {
-        System.out.print("Enter location's name: ");
+        System.out.print(Prefix + "Enter location's name: ");
         scanner.nextLine();
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
         if (name.isEmpty()) {
-            System.out.println("this location doesn't exist in the database");
+            System.out.println(Error + "this location doesn't exist in the database");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
         List<Location> locationProperties = DatabaseManager.viewLocationByName(name);
         while (locationProperties.isEmpty()) {
-            System.out.println("invalid name");
+            System.out.println(Error + "invalid name");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
+            System.out.print(Prefix + "Enter location's name: ");
             name = scanner.nextLine();
+            Ergonomics.clearLines(1);
             locationProperties = DatabaseManager.viewLocationByName(name);
         }
 
@@ -661,28 +789,38 @@ public class interFunctions {
         String newName = propertyList.getName();
         String date = propertyList.getDate();
 
-        System.out.println("\n--- UPDATE LOCATION (Press ENTER to keep current value) ---");
-        System.out.print("New name [" + newName + "]: ");
+        System.out.println(Prefix + YELLOW + "\n--- UPDATE LOCATION (Press ENTER to keep current value) ---" + RESET);
+        System.out.print(Prefix + "New name [" + newName + "]: ");
         String inputName = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
         if (!inputName.isEmpty()) {
             newName = inputName;
         }
 
-        System.out.print("New date [" + date + "]: ");
+        System.out.print(Prefix + "New date [" + date + "]: ");
         String inputDate = scanner.nextLine().trim();
+        Ergonomics.clearLines(1);
         if (!inputDate.isEmpty()) {
             date = inputDate;
         }
 
-        System.out.println("\nLocation properties updated in memory:");
-        System.out.println(newName + " | " + date);
-        if (!Ergonomics.comfirmAction(scanner)) {
+        System.out.println(Prefix + YELLOW + "\n --- Confirm Updated Location ---" + RESET);
+        System.out.println(Prefix + CYAN + " Location: " + RESET + newName + CYAN + " | Date: " + RESET + date);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3 + 2); // clear confirmation block + header lines
+
+        if (!confirmed) {
             return;
         }
+
         DatabaseManager.editLocation(name, newName, date);
+        System.out.println(Prefix + GREEN + "Location updated successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
     public static void deleteLocationDataCollector(){
-        System.out.print("Enter Location's name (leave it blank to cancel): ");
+        System.out.print(Prefix + "Enter Location's name (leave it blank to cancel): ");
         String name = scanner.nextLine();
         Ergonomics.clearLines(1);
         while(name.isBlank()){
@@ -691,15 +829,27 @@ public class interFunctions {
         }
         List<Location> locationList = DatabaseManager.viewLocationByName(name);
         if(locationList.isEmpty()){
-            System.out.println("This location does not exist in the database!");
+            System.out.println(Error + "This location does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
         Location location = locationList.getFirst();
-        System.out.println(location.getUUID() + "|" + location.getName() + " | " + location.getDate());
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + " --- Confirm Deletion ---" + RESET);
+        System.out.println(Prefix + RED + " UUID: " + RESET + location.getUUID() + RED + " | Name: " + RESET + location.getName() + RED + " | Date: " + RESET + location.getDate() + RESET);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3);
+
+        if (!confirmed) {
             return;
         }
+
         DatabaseManager.deleteLocation(name);
+        System.out.println(Prefix + GREEN + "Location deleted successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
 
 
@@ -709,44 +859,52 @@ public class interFunctions {
 
 
     public static void stockinDataCollector(){
-        System.out.print("Enter item's name: ");
+        System.out.print(Prefix + "Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
         if(itemsPropertie.isEmpty()){
-            System.out.println("This item does not exist in the database!");
+            System.out.println(Error + "This item does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("Enter location's name: ");
+        System.out.print(Prefix + "Enter location's name: ");
         String Location = scanner.nextLine();
         Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocationByName(Location);
         if(locationList.isEmpty()){
-            System.out.println("This location does not exist in the database!");
+            System.out.println(Error + "This location does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("Enter the amount of units: ");
+        System.out.print(Prefix + "Enter the amount of units: ");
         String stock = scanner.nextLine();
         Ergonomics.clearLines(1);
         int stockCount;
         try{
             stockCount = Integer.parseInt(stock);
             if(stockCount <=0){
-                System.out.println("Invalide input");
+                System.out.println(Error + "Invalide input");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return;
             }
         } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
+            System.out.println(Error + "Invalid input!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("note: ");
+        System.out.print(Prefix + "Note: ");
         String Note = scanner.nextLine();
         Ergonomics.clearLines(1);
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
-            System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
+            System.out.print(Prefix + "Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
             Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
@@ -755,61 +913,82 @@ public class interFunctions {
                 try {
                     createdAt = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println("Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
-        System.out.println(Name + " | " + Location + " | " + stockCount + " | " + Note + " | " + createdAt);
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + " --- Confirm Stock In Details ---" + RESET);
+        System.out.println(Prefix + CYAN + " Item: " + RESET + Name + CYAN + " | Location: " + RESET + Location + CYAN + " | Amount: " + RESET + stockCount + CYAN + " | Note: " + RESET + Note + CYAN + " | Date: " + RESET + createdAt);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3);
+
+        if (!confirmed) {
             return;
         }
-        DatabaseManager.stockIn(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
 
+        DatabaseManager.stockIn(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
+        System.out.println(Prefix + GREEN + "Stock added successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
     public static void stockoutDataCollector(){
-        System.out.print("Enter item's name: ");
+        System.out.print(Prefix + "Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
         if(itemsPropertie.isEmpty()){
-            System.out.println("This item does not exist in the database!");
+            System.out.println(Error + "This item does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("Enter location's name: ");
+        System.out.print(Prefix + "Enter location's name: ");
         String Location = scanner.nextLine();
         Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocationByName(Location);
         if(locationList.isEmpty()){
-            System.out.println("This location does not exist in the database!");
+            System.out.println(Error + "This location does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("Enter the amount of units: ");
+        System.out.print(Prefix + "Enter the amount of units: ");
         String stock = scanner.nextLine();
         Ergonomics.clearLines(1);
         int stockCount;
         try{
             stockCount = Integer.parseInt(stock);
             if(stockCount <=0){
-                System.out.println("Invalide input");
+                System.out.println(Error + "Invalide input");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return;
             }
             int stockLevels = DatabaseManager.viewStockLevels(itemsPropertie.getFirst().getUuid());
             if(stockCount>stockLevels){
-                System.out.println("Not enough units to do this action, current available units: " + stockLevels);
+                System.out.println(Error + "Not enough units to do this action, current available units: " + stockLevels);
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return;
             }
         } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
+            System.out.println(Error + "Invalid input!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("note: ");
+        System.out.print(Prefix + "Note: ");
         String Note = scanner.nextLine();
         Ergonomics.clearLines(1);
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
-            System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
+            System.out.print(Prefix + "Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
             Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
@@ -818,36 +997,51 @@ public class interFunctions {
                 try {
                     createdAt = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println("Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
-        System.out.println(Name + " | " + Location + " | " + stockCount + " | " + Note + " | " + createdAt);
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + " --- Confirm Stock Out Details ---" + RESET);
+        System.out.println(Prefix + CYAN + " Item: " + RESET + Name + CYAN + " | Location: " + RESET + Location + CYAN + " | Amount: " + RESET + stockCount + CYAN + " | Note: " + RESET + Note + CYAN + " | Date: " + RESET + createdAt);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3);
+
+        if (!confirmed) {
             return;
         }
-        DatabaseManager.stockOut(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
 
+        DatabaseManager.stockOut(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
+        System.out.println(Prefix + GREEN + "Stock removed successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
     public static void adjustStockValue(){
-        System.out.print("Enter item's name: ");
+        System.out.print(Prefix + "Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
         if(itemsPropertie.isEmpty()){
-            System.out.println("This item does not exist in the database!");
+            System.out.println(Error + "This item does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("Enter location's name: ");
+        System.out.print(Prefix + "Enter location's name: ");
         String Location = scanner.nextLine();
         Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocationByName(Location);
         if(locationList.isEmpty()){
-            System.out.println("This location does not exist in the database!");
+            System.out.println(Error + "This location does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("Enter the amount of units: ");
+        System.out.print(Prefix + "Enter the amount of units: ");
         String stock = scanner.nextLine();
         Ergonomics.clearLines(1);
         int stockCount;
@@ -855,20 +1049,24 @@ public class interFunctions {
             stockCount = Integer.parseInt(stock);
             int stockLevels = DatabaseManager.viewStockLevels(itemsPropertie.getFirst().getUuid());
             if(stockCount+stockLevels<0){
-                System.out.println("Not enough units to do this action, current available units: " + stockLevels);
+                System.out.println(Error + "Not enough units to do this action, current available units: " + stockLevels);
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return;
             }
         } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
+            System.out.println(Error + "Invalid input!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("note: ");
+        System.out.print(Prefix + "Note: ");
         String Note = scanner.nextLine();
         Ergonomics.clearLines(1);
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
-            System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
+            System.out.print(Prefix + "Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
             Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
@@ -877,15 +1075,27 @@ public class interFunctions {
                 try {
                     createdAt = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println("Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
-        System.out.println(Name + " | " + Location + " | " + stockCount + " | " + Note + " | " + createdAt);
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + " --- Confirm Stock Adjustment Details ---" + RESET);
+        System.out.println(Prefix + CYAN + " Item: " + RESET + Name + CYAN + " | Location: " + RESET + Location + CYAN + " | Amount: " + RESET + stockCount + CYAN + " | Note: " + RESET + Note + CYAN + " | Date: " + RESET + createdAt);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3);
+
+        if (!confirmed) {
             return;
         }
+
         DatabaseManager.adjustStock(itemsPropertie.getFirst().getUuid(),locationList.getFirst().getUUID(),stockCount,Note, String.valueOf(createdAt));
+        System.out.println(Prefix + GREEN + "Stock adjusted successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
     public static void viewStockFunc(){
         viewStockList option = viewStockSelector();
@@ -926,27 +1136,37 @@ public class interFunctions {
             case 4 -> {
                 return viewStockList.LOCATION;
             }
+            case 0->{
+                return viewStockList.QUIT;
+            }
             default -> {
                 return viewStockList.QUIT;
             }
         }
     }
     public static void viewStockLevelsDataCollector(){
-        System.out.print("Enter item's name: ");
+        System.out.print(Prefix + "Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
+        int linesPrinted = 0;
         if(itemsPropertie.isEmpty()){
-            System.out.println("This item does not exist in the database!");
-            return;
+            System.out.println(Error + "This item does not exist in the database!");
+            linesPrinted++;
+        } else {
+            int stockLevels = DatabaseManager.viewStockLevels(itemsPropertie.getFirst().getUuid());
+            if(stockLevels == -1){
+                System.out.println(Error + "Could not retrieve stock levels for this item.");
+                linesPrinted++;
+            } else {
+                System.out.println(Prefix + Name+" stocks are: " + stockLevels);
+                linesPrinted++;
+            }
         }
-        int stockLevels = DatabaseManager.viewStockLevels(itemsPropertie.getFirst().getUuid());
-        if(stockLevels == -1){
-            System.out.println("Could not retrieve stock levels for this item.");
-            return;
-        }
-        System.out.println(Name+" stocks are: "+stockLevels);
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void viewStockByCategoryDataCollector(){
         scanner.nextLine();
@@ -954,13 +1174,19 @@ public class interFunctions {
         String category = scanner.nextLine().trim();
         Ergonomics.clearLines(1);
         List<String> stockData = DatabaseManager.viewStockLevelsByCategory(category);
+        int linesPrinted = 0;
         if (stockData.isEmpty()) {
-            System.out.println("There are no items in this category!");
+            System.out.println(Error + "There are no items in this category!");
+            linesPrinted++;
         } else {
             for (String line : stockData) {
-                System.out.println(line);
+                System.out.println(Prefix + line);
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void viewStockByLocationDataCollector(){
         scanner.nextLine();
@@ -968,18 +1194,25 @@ public class interFunctions {
         String locationName = scanner.nextLine().trim();
         Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocationByName(locationName);
+        int linesPrinted = 0;
         if(locationList.isEmpty()){
-            System.out.println("This location does not exist in the database!");
-            return;
-        }
-        List<String> stockData = DatabaseManager.viewStockLevelsByLocation(locationList.getFirst().getUUID());
-        if (stockData.isEmpty()) {
-            System.out.println("There are no stock movements at this location!");
+            System.out.println(Error + "This location does not exist in the database!");
+            linesPrinted++;
         } else {
-            for (String line : stockData) {
-                System.out.println(line);
+            List<String> stockData = DatabaseManager.viewStockLevelsByLocation(locationList.getFirst().getUUID());
+            if (stockData.isEmpty()) {
+                System.out.println(Error + "There are no stock movements at this location!");
+                linesPrinted++;
+            } else {
+                for (String line : stockData) {
+                    System.out.println(Prefix + line);
+                    linesPrinted++;
+                }
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void viewStockByDateDataCollector(){
         scanner.nextLine();
@@ -995,7 +1228,9 @@ public class interFunctions {
                 try {
                     startDate = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
@@ -1010,68 +1245,92 @@ public class interFunctions {
                 try {
                     endDate = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println(Prefix + "Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
         List<String> stockData = DatabaseManager.viewStockLevelsByDate(startDate.toString(), endDate.toString());
+        int linesPrinted = 0;
         if (stockData.isEmpty()) {
-            System.out.println("There are no stock movements for this date range!");
+            System.out.println(Error + "There are no stock movements for this date range!");
+            linesPrinted++;
         } else {
             for (String line : stockData) {
-                System.out.println(line);
+                System.out.println(Prefix + line);
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
 
     public static void transferStockDataCollector(){
-        System.out.println("Enter item's name:");
+        System.out.print(Prefix + "Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
         if(itemsPropertie.isEmpty()){
-            System.out.println("This item does not exist in the database!");
+            System.out.println(Error + "This item does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.println("transfer from:");
+        System.out.print(Prefix + "Transfer from: ");
         String firstLocation = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Location> firstLocationList = DatabaseManager.viewLocationByName(firstLocation);
         if(firstLocationList.isEmpty()){
-            System.out.println("This location does not exist in the database!");
+            System.out.println(Error + "This location does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.println("transfer to:");
+        System.out.print(Prefix + "Transfer to: ");
         String lastLocation = scanner.nextLine();
+        Ergonomics.clearLines(1);
         List<Location> lastLocationList = DatabaseManager.viewLocationByName(lastLocation);
         if(lastLocationList.isEmpty()){
-            System.out.println("This location does not exist in the database!");
+            System.out.println(Error + "This location does not exist in the database!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.println("Enter amount of units");
+        System.out.print(Prefix + "Enter amount of units: ");
         String stock = scanner.nextLine();
+        Ergonomics.clearLines(1);
         int stockCount;
         try{
             stockCount = Integer.parseInt(stock);
             if(stockCount <=0){
-                System.out.println("Invalide input");
+                System.out.println(Error + "Invalide input");
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return;
             }
             int stockLevels = DatabaseManager.viewStockLevelsByItemAndLocation(itemsPropertie.getFirst().getUuid(), firstLocationList.getFirst().getUUID());
             if(stockCount>stockLevels){
-                System.out.println("Not enough units available in "+ firstLocation +", current available units are: " + stockLevels);
+                System.out.println(Error + "Not enough units available in "+ firstLocation +", current available units are: " + stockLevels);
+                Ergonomics.waitAnyKey();
+                Ergonomics.clearLines(2);
                 return;
             }
         } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
+            System.out.println(Error + "Invalid input!");
+            Ergonomics.waitAnyKey();
+            Ergonomics.clearLines(2);
             return;
         }
-        System.out.print("note: ");
+        System.out.print(Prefix + "Note: ");
         String Note = scanner.nextLine();
         Ergonomics.clearLines(1);
         LocalDate createdAt = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         while (createdAt == null) {
-            System.out.print("Enter date (yyyy-MM-dd, press enter for today): ");
+            System.out.print(Prefix + "Enter date (yyyy-MM-dd, press enter for today): ");
             String dateInput = scanner.nextLine().trim();
             Ergonomics.clearLines(1);
             if (dateInput.isEmpty()) {
@@ -1080,15 +1339,27 @@ public class interFunctions {
                 try {
                     createdAt = LocalDate.parse(dateInput, formatter);
                 } catch (Exception e) {
-                    System.out.println("Invalid date format. Use yyyy-MM-dd.");
+                    System.out.println(Error + "Invalid date format. Use yyyy-MM-dd.");
+                    Ergonomics.waitAnyKey();
+                    Ergonomics.clearLines(2);
                 }
             }
         }
-        System.out.println(Name + " | " + firstLocation + " -> " + lastLocation + " | " + stockCount + " | " + Note + " | " + createdAt);
-        if (!Ergonomics.comfirmAction(scanner)) {
+
+        System.out.println(Prefix + YELLOW + " --- Confirm Stock Transfer Details ---" + RESET);
+        System.out.println(Prefix + CYAN + " Item: " + RESET + Name + CYAN + " | From: " + RESET + firstLocation + CYAN + " | To: " + RESET + lastLocation + CYAN + " | Amount: " + RESET + stockCount + CYAN + " | Note: " + RESET + Note + CYAN + " | Date: " + RESET + createdAt);
+
+        boolean confirmed = Ergonomics.comfirmAction(scanner);
+        Ergonomics.clearLines(3);
+
+        if (!confirmed) {
             return;
         }
+
         DatabaseManager.transferStock(itemsPropertie.getFirst().getUuid(),firstLocationList.getFirst().getUUID(),lastLocationList.getFirst().getUUID(),stockCount,Note,createdAt);
+        System.out.println(Prefix + GREEN + "Stock transferred successfully!" + RESET);
+        Ergonomics.waitAnyKey();
+        Ergonomics.clearLines(2);
     }
 
     public static void reportsFunc(){
@@ -1118,6 +1389,9 @@ public class interFunctions {
             case 2 -> {
                 return reportList.LOCATION;
             }
+            case 0 -> {
+                return reportList.QUIT;
+            }
             default -> {
                 return reportList.QUIT;
             }
@@ -1125,14 +1399,21 @@ public class interFunctions {
     }
     public static void lowStockReportDataCollector(){
         List<String> lowStockItems = DatabaseManager.getLowStockItems();
+        int linesPrinted = 0;
         if (lowStockItems.isEmpty()) {
-            System.out.println("No items are below their reorder point.");
+            System.out.println(Error + "No items are below their reorder point.");
+            linesPrinted++;
         } else {
-            System.out.println("==== Low Stock Report ====");
+            System.out.println(Prefix + YELLOW + " ==== Low Stock Report ====" + RESET);
+            linesPrinted++;
             for (String line : lowStockItems) {
-                System.out.println(line);
+                System.out.println(Prefix + line);
+                linesPrinted++;
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
     public static void lowStockByLocationDataCollector(){
         scanner.nextLine();
@@ -1140,40 +1421,56 @@ public class interFunctions {
         String locationName = scanner.nextLine().trim();
         Ergonomics.clearLines(1);
         List<Location> locationList = DatabaseManager.viewLocationByName(locationName);
+        int linesPrinted = 0;
         if(locationList.isEmpty()){
-            System.out.println("This location does not exist in the database!");
-            return;
-        }
-        List<String> lowStockItems = DatabaseManager.getLowStockItemsByLocation(locationList.getFirst().getUUID());
-        if (lowStockItems.isEmpty()) {
-            System.out.println("No items are below their reorder point at this location.");
+            System.out.println(Error + "This location does not exist in the database!");
+            linesPrinted++;
         } else {
-            System.out.println("==== Low Stock Report: " + locationName + " ====");
-            for (String line : lowStockItems) {
-                System.out.println(line);
+            List<String> lowStockItems = DatabaseManager.getLowStockItemsByLocation(locationList.getFirst().getUUID());
+            if (lowStockItems.isEmpty()) {
+                System.out.println(Error + "No items are below their reorder point at this location.");
+                linesPrinted++;
+            } else {
+                System.out.println(Prefix + YELLOW + " ==== Low Stock Report: " + locationName + " ====" + RESET);
+                linesPrinted++;
+                for (String line : lowStockItems) {
+                    System.out.println(Prefix + line);
+                    linesPrinted++;
+                }
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
 
     public static void itemHistoryDataCollector(){
-        System.out.print("Enter item's name: ");
+        System.out.print(Prefix + "Enter item's name: ");
         scanner.nextLine();
         String Name = scanner.nextLine();
         Ergonomics.clearLines(1);
         List<Item> itemsPropertie = DatabaseManager.viewItem(Name);
+        int linesPrinted = 0;
         if(itemsPropertie.isEmpty()){
-            System.out.println("This item does not exist in the database!");
-            return;
-        }
-        List<StockMovement> stockMovements = DatabaseManager.getItemHistory(itemsPropertie.getFirst().getUuid());
-        if (stockMovements.isEmpty()) {
-            System.out.println("No movement history found for this item.");
+            System.out.println(Error + "This item does not exist in the database!");
+            linesPrinted++;
         } else {
-            System.out.println("==== History " + Name + " ====");
-            System.out.println("    DATE     | type | amount | location | note");
-            for (StockMovement movement : stockMovements) {
-                System.out.println(movement);
+            List<StockMovement> stockMovements = DatabaseManager.getItemHistory(itemsPropertie.getFirst().getUuid());
+            if (stockMovements.isEmpty()) {
+                System.out.println(Error + "No movement history found for this item.");
+                linesPrinted++;
+            } else {
+                System.out.println(Prefix + YELLOW + " ==== History " + Name + " ====" + RESET);
+                System.out.println(Prefix + CYAN + "    DATE     | type | amount | location | note" + RESET);
+                linesPrinted += 2;
+                for (StockMovement movement : stockMovements) {
+                    System.out.println(Prefix + movement);
+                    linesPrinted++;
+                }
             }
         }
+        Ergonomics.waitAnyKey();
+        linesPrinted++;
+        Ergonomics.clearLines(linesPrinted);
     }
 }

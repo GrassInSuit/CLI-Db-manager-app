@@ -1,9 +1,16 @@
+// Ergonomics.java
 package org.example;
 
 import java.util.Scanner;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+import org.jline.terminal.Attributes;
+import java.io.Reader;
 
 public class Ergonomics {
-
+    public static final String Prefix = Color.CYAN + "[IMS]:" + Color.RESET;
+    public static final String Error = Color.RED + "[ERROR]: " + Color.RESET;
+    public static final String Arrow = Color.CYAN + " -> " + Color.RESET;
     public static class Color{
         public static final String RESET = "\u001B[0m";
         public static final String RED = "\u001B[31m";
@@ -12,8 +19,7 @@ public class Ergonomics {
         public static final String BLUE = "\u001B[34m";
         public static final String CYAN = "\u001B[36m";
         public static final String MAGENTA = "\u001B[35m";
-        public static final String Prefix = BLUE + "[IMS]: " + RESET;
-        public static final String Arrow = BLUE + " -> " + RESET;
+
     }
     public static void clearLines(int numberOfLines) {
         for (int i = 0; i < numberOfLines; i++) {
@@ -27,8 +33,23 @@ public class Ergonomics {
         System.out.flush();
     }
     public static boolean comfirmAction(Scanner scanner){
-        System.out.print(Color.Arrow + Color.YELLOW + "Proceed? [y/N]: " + Color.RESET);
+        System.out.print(Arrow + Color.YELLOW + "Proceed? [y/N]: " + Color.RESET);
         String input = scanner.nextLine().trim();
         return input.equalsIgnoreCase("Y");
+    }
+    public static void waitAnyKey() {
+        System.out.println(Prefix+"Press any key to proceed...");
+        System.out.flush();
+
+        try (Terminal terminal = TerminalBuilder.terminal()) {
+
+            terminal.enterRawMode();
+
+            Reader reader = terminal.reader();
+            reader.read();
+
+        } catch (Exception e) {
+            System.err.println(Error+ "\nreading the terminal gone wrong : " + e.getMessage());
+        }
     }
 }

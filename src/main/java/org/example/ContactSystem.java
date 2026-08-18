@@ -11,8 +11,8 @@ import java.lang.ClassNotFoundException;
 public class ContactSystem {
         private Connection connection;
         public boolean isConnected = false;
-        private final String Prefix = Ergonomics.Color.Prefix;
-        private final String Arrow = Ergonomics.Color.Arrow;
+        private final String Prefix = Ergonomics.Prefix;
+        private final String Arrow = Ergonomics.Arrow;
         public static DatabaseManager databaseManager;
         public void setConnection(String URL, String name , String user , String password){
                 try {

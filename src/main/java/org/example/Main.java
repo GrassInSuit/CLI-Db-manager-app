@@ -12,8 +12,8 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        final String Prefix = Ergonomics.Color.Prefix;
-        final String Arrow = Ergonomics.Color.Arrow;
+        final String Prefix = Ergonomics.Prefix;
+        final String Arrow = Ergonomics.Arrow;
         final Console console = System.console();
         //This boolean checkes if you are already loged in or not
         ContactSystem connectionManager = new ContactSystem();
